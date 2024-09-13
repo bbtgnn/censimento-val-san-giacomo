@@ -15,7 +15,16 @@ export const stato_conservazione = [
   'modifiche sostanziali caratteri tradizionali',
 ] as const
 
-export const tag_moderni = ['RES', 'A PROD', 'COM', 'MULTI', 'nd', 'PROD', 'servizio'] as const
+export const tag_moderni = [
+  'residenziale',
+  'multifunzione',
+  'commerciale',
+  'produttivo rurale',
+  'produttivo industriale',
+  'servizio',
+  'non rilevabile',
+  'luogo di culto',
+] as const
 
 export const tag_storici_1951 = [
   'PRATO',
