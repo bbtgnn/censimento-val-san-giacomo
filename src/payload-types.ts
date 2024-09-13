@@ -13,6 +13,10 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    edifici: Edifici;
+    sottosistemi: Sottosistemi;
+    localita: Localita;
+    sezione_localita: SezioneLocalita;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
@@ -66,7 +70,6 @@ export interface User {
  */
 export interface Media {
   id: string;
-  alt: string;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -78,6 +81,322 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "edifici".
+ */
+export interface Edifici {
+  id: string;
+  sottosistema?: (string | null) | Sottosistemi;
+  localita?: (string | null) | Localita;
+  sezione_localita?: (string | null) | SezioneLocalita;
+  /**
+   * @minItems 2
+   * @maxItems 2
+   */
+  coordinate?: [number, number] | null;
+  anagrafica?:
+    | {
+        anno?: string | null;
+        particella?: string | null;
+        subalterno?: string | null;
+        accessibilita?: ('sentiero' | 'vicolo pedonale' | 'strada carrabile' | 'strada in terra battuta ') | null;
+        unita?:
+          | {
+              piani?: number | null;
+              sottotetto?: boolean | null;
+              seminterrato?: boolean | null;
+              piano_interrato?: boolean | null;
+              id?: string | null;
+            }[]
+          | null;
+        stato_utilizzo?:
+          | ('uso permanente' | 'uso temporaneo' | 'disuso' | 'disuso - rudere' | 'non rilevabile' | 'non presente')
+          | null;
+        stato_utilizzo_secondario?:
+          | ('uso permanente' | 'uso temporaneo' | 'disuso' | 'disuso - rudere' | 'non rilevabile' | 'non presente')
+          | null;
+        stato_conservazione?:
+          | (
+              | 'perdita funzionalità'
+              | 'fenomeni di degrado diffusi'
+              | 'fenomeni di degrado superficiali'
+              | 'senza fenomeni di degrado'
+              | 'modifiche sostanziali caratteri tradizionali'
+            )[]
+          | null;
+        destinazioni_uso?:
+          | {
+              nome?: string | null;
+              tag_storico?:
+                | (
+                    | 'A CASA DIR'
+                    | 'BOSCO CEDU'
+                    | 'CANTINA D'
+                    | 'CANTINA'
+                    | 'CASA ABB'
+                    | 'CASA COAD'
+                    | 'CASA DIR'
+                    | 'CASA IR'
+                    | 'CASA PARRO'
+                    | 'CASA'
+                    | 'CASELLO'
+                    | 'CASERMA'
+                    | 'CASOLARE A'
+                    | 'CASOLARE D'
+                    | 'CASOLARE'
+                    | 'CASTAGNETO'
+                    | 'CC'
+                    | 'CEPPO NUDO'
+                    | 'CHECK - ND'
+                    | 'COLTIVO'
+                    | 'DOGANA'
+                    | 'ED REL'
+                    | 'F'
+                    | 'FIENILE'
+                    | 'LT ABB'
+                    | 'LT'
+                    | 'luogo superiore'
+                    | 'MULINO'
+                    | 'P CANTINA'
+                    | 'P CASA ABB'
+                    | 'P CASA'
+                    | 'P CASELLO'
+                    | 'P CC'
+                    | 'P F'
+                    | 'P FIENILE'
+                    | 'P LT'
+                    | 'P SF'
+                    | 'P STALLA'
+                    | 'PASCOLO'
+                    | 'PRATO'
+                    | 'S'
+                    | 'SASSO N'
+                    | 'SF'
+                    | 'STALLA'
+                    | 'ZAPPATIVO'
+                    | 'ZERBO'
+                    | 'NP'
+                    | 'URBANO'
+                    | 'FA URBANO'
+                    | 'PFA RURALE'
+                    | 'FA RURALE'
+                  )
+                | null;
+              tag_moderno?: ('RES' | 'A PROD' | 'COM' | 'MULTI' | 'nd' | 'PROD' | 'servizio') | null;
+              id?: string | null;
+            }[]
+          | null;
+        stato?: ('presente' | 'non_presente' | 'non_disponibile' | 'parziale') | null;
+        id?: string | null;
+      }[]
+    | null;
+  analisi_strutturale?:
+    | {
+        componente?:
+          | ('componenti strutturali verticali' | 'componenti strutturali orizzontali' | 'coperture' | 'fondazioni')
+          | null;
+        materiali?:
+          | (
+              | 'pietra a secco'
+              | 'pietra con legante'
+              | 'legno'
+              | 'calcestruzzo armato'
+              | 'laterizio'
+              | 'non rilevabile'
+              | 'pietra'
+              | 'laterizi'
+              | 'non rilevabile '
+              | 'materiale plastico'
+              | 'materiale metallico'
+              | 'non presente'
+              | 'altro'
+            )[]
+          | null;
+        tecnica_costruttiva?:
+          | (
+              | 'a telaio '
+              | 'incardinato'
+              | 'incardinato + basamento e/o parziale rivestimento in pietra'
+              | 'muri portanti'
+              | 'non rilevabile'
+              | 'a telaio'
+              | 'volte'
+              | 'altra tecnica'
+              | 'tecnica moderna'
+              | 'tecnica tradizionale'
+            )
+          | null;
+        stato_conservazione?:
+          | (
+              | 'perdita funzionalità '
+              | 'fenomeni di degrado diffusi'
+              | 'fenomeni di degrado superficiali'
+              | 'senza fenomeni di degrado'
+            )
+          | null;
+        fenomeni_degrado?:
+          | (
+              | 'corrosione elementi metallici'
+              | 'deposito superficiale'
+              | 'erosione elementi lignei strutturali'
+              | 'erosione giunti di malta'
+              | 'fessurazioni'
+              | 'mancanza componenti strutturali'
+              | 'mancanza elementi singoli'
+              | 'mancanza elementi strutturali'
+              | 'marcescenza componenti strutturali lignee'
+              | 'marcescenza elementi lignei strutturali'
+              | 'patina biologica'
+              | 'rappezzi cementizi'
+              | 'vegetazione infestante'
+              | 'mancanza elementi strutturali puntuali (conci lapidei, elementi lignei)'
+            )[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  analisi_componenti_architettoniche?:
+    | {
+        fronte?: ('sud' | 'nord' | 'est' | 'ovest' | 'generale') | null;
+        componente?: ('finiture esterne' | 'infissi esterni' | 'apparati decorativi' | 'collegamenti esterni') | null;
+        tipologia?:
+          | (
+              | 'intonaco_tintura'
+              | 'intonaco_fine'
+              | 'intonaco_rustico'
+              | 'non_presente'
+              | 'porte'
+              | 'portone'
+              | 'grate'
+              | 'box auto'
+              | 'portefinestre'
+              | 'finestre'
+              | 'persiane / scuri'
+              | 'tapparelle'
+              | 'dipinti - affreschi'
+              | 'iscrizioni storiche'
+              | 'marcapiano'
+              | 'cornici lapidee o tinte'
+              | 'finestre a sguincio'
+              | 'architravi lignei'
+              | 'architravi lapidei'
+              | 'angolari in conci lapidei'
+              | 'ballatoio'
+              | 'loggia'
+              | 'scale'
+              | 'sottopassaggio'
+              | 'balcone'
+            )
+          | null;
+        materiali?:
+          | (
+              | 'malta di calce (bianca - aerea)'
+              | 'malta di calce (giallastra - idraulica)'
+              | 'malta cementizia (grigia)'
+              | 'legno'
+              | 'materiale plastico'
+              | 'metallo'
+              | 'pietra'
+              | 'calcestruzzo armato'
+            )
+          | null;
+        stato_conservazione?:
+          | (
+              | 'perdita funzionalità '
+              | 'fenomeni di degrado diffusi'
+              | 'fenomeni di degrado superficiali'
+              | 'senza fenomeni di degrado'
+            )
+          | null;
+        fenomeni_degrado?:
+          | (
+              | 'deposito superficiale'
+              | 'disgregazione malta di rivestimento'
+              | 'erosione malta di rivestimento'
+              | 'lacuna malta di rivestimento'
+              | 'erosione giunti di malta'
+              | 'fessurazioni'
+              | 'marcescenza legno'
+              | 'patina biologica'
+              | 'colature'
+              | 'rappezzi cementizi'
+              | 'umidità di risalita'
+              | 'corrosione elementi metallici'
+            )[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  Altro?: {
+    pavimentazioni_esterne?: ('terra battuta' | 'ceramica' | 'pietra' | 'strada carrabile')[] | null;
+    smaltimento_acqua?: ('metallo' | 'legno' | 'non rilevabile' | 'non presente')[] | null;
+    impiantistica?: ('idrico sanitario' | 'idrico' | 'elettrico' | 'gas' | 'non rilevabile' | 'non presente')[] | null;
+    presenza_opere_provvisionali?:
+      | ('scatola muraria (tiranti, puntellature, centine)' | 'coperture provvisorie' | 'altro')[]
+      | null;
+    vincoli_tutele?: ('I1' | 'I2' | 'I3' | 'I4' | 'I5' | 'LOCALE' | 'REGIONALE' | 'NAZIONALE')[] | null;
+    caratteri_storico_culturali?:
+      | (
+          | 'cardèn (struttura in legno incardinata)'
+          | 'solè (parziale cardèn a valle)'
+          | 'pigna'
+          | 'scigugna / culdera (produzione casearia)'
+          | 'stua interna'
+          | 'casèl (conservazione latte)'
+          | 'tabìa (stalla / fienile con pilastri / tamponatura in legno'
+          | 'crapèna - tècc (fienile)'
+          | 'crotto (addossato alla montagna - sorèl)'
+          | 'grè (essicatoio castagne)'
+          | 'stalla fienile'
+          | 'pilastri basamento'
+          | 'fienile'
+          | 'edificio rurale in pietra (stalla / fienile o gre)'
+        )[]
+      | null;
+  };
+  dati_lavoro?: {
+    imu_2021?: string | null;
+    tari_2021?: string | null;
+    punto_gis?: string | null;
+    altre_note?: string | null;
+    informazioni_aggiuntive?: string | null;
+  };
+  immagini?: (string | Media)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sottosistemi".
+ */
+export interface Sottosistemi {
+  id: string;
+  name?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "localita".
+ */
+export interface Localita {
+  id: string;
+  name?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sezione_localita".
+ */
+export interface SezioneLocalita {
+  id: string;
+  name?: string | null;
+  localita?: (string | null) | Localita;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
