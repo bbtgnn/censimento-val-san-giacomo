@@ -1,33 +1,21 @@
-import payload from 'payload'
-import path from 'path'
-import dotenv from 'dotenv'
-import config from '../payload.config'
-import { fileURLToPath } from 'url'
+import { getPayload } from 'payload'
+import config from '@payload-config'
+import { parse } from 'csv-parse'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-dotenv.config({
-  path: path.resolve(dirname, '../.env'),
-})
+const seed = async () => {
+  const payload = await getPayload({ config })
 
-const { PAYLOAD_SECRET } = process.env
+  const x = parse(path.resolve(dirname, 'Località 21d4a028e5f74a73945c97425931e83f_all.csv'))
 
-const doAction = async () => {
-  if (!PAYLOAD_SECRET) return
-
-  await payload.init({ config })
-
-  await payload.create({
+  const page = await payload.create({
     collection: 'edifici',
-    data: {
-      dati_lavoro: {
-        imu_2021: 'ok',
-      },
-    },
+    data: {},
   })
-
-  console.log('0ok')
 }
 
-doAction()
+await seed()
