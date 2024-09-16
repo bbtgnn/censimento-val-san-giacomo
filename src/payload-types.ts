@@ -184,7 +184,18 @@ export interface Edifici {
                     | 'FA RURALE'
                   )
                 | null;
-              tag_moderno?: ('RES' | 'A PROD' | 'COM' | 'MULTI' | 'nd' | 'PROD' | 'servizio') | null;
+              tag_moderno?:
+                | (
+                    | 'residenziale'
+                    | 'multifunzione'
+                    | 'commerciale'
+                    | 'produttivo rurale'
+                    | 'produttivo industriale'
+                    | 'servizio'
+                    | 'non rilevabile'
+                    | 'luogo di culto'
+                  )
+                | null;
               id?: string | null;
             }[]
           | null;
