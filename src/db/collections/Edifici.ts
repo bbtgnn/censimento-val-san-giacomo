@@ -5,9 +5,9 @@ import {
   componenti_strutturali,
   fenomeni_degrado_strutturali,
   materiali_strutturali,
+  stati_censimento_1807,
   stati_conservazione,
   stati_utilizzo,
-  stato_conservazione,
   tag_moderni,
   tag_storici_1853,
   tag_storici_1951,
@@ -35,7 +35,6 @@ export const Edifici: CollectionConfig = {
     read: () => true,
   },
   fields: [
-    F.relation('sottosistemi', 'sottosistema'),
     F.relation('localita', 'localita'), // TODO - Filter options based on [sottosistema]
     F.relation('sezione_localita', 'sezione_localita'), // TODO - Filter options based on [localita]
     {
@@ -90,7 +89,7 @@ export const Edifici: CollectionConfig = {
           name: 'stato_conservazione',
           type: 'select',
           hasMany: true,
-          options: Object.values(stato_conservazione),
+          options: Object.values(stati_conservazione),
         },
         {
           name: 'destinazioni_uso',
@@ -115,7 +114,7 @@ export const Edifici: CollectionConfig = {
         {
           name: 'stato',
           type: 'select',
-          options: ['presente', 'non_presente', 'non_disponibile', 'parziale'],
+          options: Object.values(stati_censimento_1807),
         },
       ],
     },

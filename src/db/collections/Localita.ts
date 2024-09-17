@@ -14,5 +14,5 @@ export const Localita: CollectionConfig = {
   access: {
     read: () => true,
   },
-  fields: [F.name],
+  fields: [F.name, F.relation('sottosistemi', 'sottosistema')],
 }

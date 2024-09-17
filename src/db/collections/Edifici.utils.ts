@@ -7,7 +7,7 @@ export const stati_utilizzo = [
   'non presente',
 ] as const
 
-export const stato_conservazione = [
+export const stati_conservazione = [
   'perdita funzionalità',
   'fenomeni di degrado diffusi',
   'fenomeni di degrado superficiali',
@@ -82,6 +82,13 @@ export const tag_storici_1853 = [
   'STALLA',
   'ZAPPATIVO',
   'ZERBO',
+] as const
+
+export const stati_censimento_1807 = [
+  'presente',
+  'non presente',
+  'non disponibile',
+  'parziale',
 ] as const
 
 //
@@ -214,12 +221,3 @@ export const componenti_architettoniche = {
   string,
   { tipologia: string[]; materiali: string[]; fenomeni_degrado: string[] }
 >
-
-//
-
-export const stati_conservazione = [
-  'perdita funzionalità ',
-  'fenomeni di degrado diffusi',
-  'fenomeni di degrado superficiali',
-  'senza fenomeni di degrado',
-] as const

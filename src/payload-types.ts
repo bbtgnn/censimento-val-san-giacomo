@@ -88,7 +88,6 @@ export interface Media {
  */
 export interface Edifici {
   id: string;
-  sottosistema?: (string | null) | Sottosistemi;
   localita?: (string | null) | Localita;
   sezione_localita?: (string | null) | SezioneLocalita;
   /**
@@ -199,7 +198,7 @@ export interface Edifici {
               id?: string | null;
             }[]
           | null;
-        stato?: ('presente' | 'non_presente' | 'non_disponibile' | 'parziale') | null;
+        stato?: ('presente' | 'non presente' | 'non disponibile' | 'parziale') | null;
         id?: string | null;
       }[]
     | null;
@@ -241,10 +240,11 @@ export interface Edifici {
           | null;
         stato_conservazione?:
           | (
-              | 'perdita funzionalità '
+              | 'perdita funzionalità'
               | 'fenomeni di degrado diffusi'
               | 'fenomeni di degrado superficiali'
               | 'senza fenomeni di degrado'
+              | 'modifiche sostanziali caratteri tradizionali'
             )
           | null;
         fenomeni_degrado?:
@@ -315,10 +315,11 @@ export interface Edifici {
           | null;
         stato_conservazione?:
           | (
-              | 'perdita funzionalità '
+              | 'perdita funzionalità'
               | 'fenomeni di degrado diffusi'
               | 'fenomeni di degrado superficiali'
               | 'senza fenomeni di degrado'
+              | 'modifiche sostanziali caratteri tradizionali'
             )
           | null;
         fenomeni_degrado?:
@@ -380,19 +381,20 @@ export interface Edifici {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "sottosistemi".
+ * via the `definition` "localita".
  */
-export interface Sottosistemi {
+export interface Localita {
   id: string;
   name?: string | null;
+  sottosistema?: (string | null) | Sottosistemi;
   updatedAt: string;
   createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "localita".
+ * via the `definition` "sottosistemi".
  */
-export interface Localita {
+export interface Sottosistemi {
   id: string;
   name?: string | null;
   updatedAt: string;
