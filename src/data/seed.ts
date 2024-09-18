@@ -4,14 +4,18 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import * as csv from '@fast-csv/parse'
-import { Array as A, Effect, pipe, String as S } from 'effect'
+import { Array as A, Effect, Option, pipe, String as S } from 'effect'
 import {
+  accessibilita_edificio,
+  fenomeni_degrado_strutturali,
+  materiali_strutturali,
   stati_censimento_1807,
   stati_conservazione,
   stati_utilizzo,
   tag_moderni,
   tag_storici_1853,
   tag_storici_1951,
+  tecniche_costruttive_strutturali,
 } from '@/db/collections/Edifici.utils'
 
 const filename = fileURLToPath(import.meta.url)
@@ -115,34 +119,6 @@ async function seed() {
         (sez) => sez.name === sezione_localita_nome,
       )
 
-      const destinazioni_uso_1951 = pipe(
-        parseString(datum, 'dest uso 1950')
-          .split(',')
-          .map((s) => s.trim()),
-        A.intersection(tag_storici_1951),
-      )
-
-      const destinazioni_uso_1853 = pipe(
-        parseString(datum, 'dest uso 1853')
-          .split(',')
-          .map((s) => s.trim()),
-        A.intersection(tag_storici_1853),
-      )
-
-      const destinazioni_uso_2022 = pipe(
-        parseString(datum, 'destinazione_uso_attuale')
-          .split(',')
-          .map((s) => s.trim()),
-        A.intersection(tag_moderni),
-      )
-
-      const stato_1807 = stati_censimento_1807.find((s) => s == parseString(datum, 'cat 1807'))
-
-      const stati_conservazione_globale = pipe(
-        parseString(datum, 'stato_conservazione_globale').split(',').map(S.trim),
-        A.intersection(stati_conservazione),
-      )
-
       return payload.create({
         collection: 'edifici',
         data: {
@@ -152,27 +128,76 @@ async function seed() {
             {
               anno: '2022',
               particella: parseString(datum, 'cat 2022'),
-              stato_utilizzo: stati_utilizzo.find(
-                (s) => s == parseString(datum, 'stato_utilizzo_attuale'),
+              stato_utilizzo: find(parseString(datum, 'stato_utilizzo_attuale'), stati_utilizzo),
+
+              destinazioni_uso: intersect(
+                parseStringArray(datum, 'destinazione_uso_attuale'),
+                tag_moderni,
+              ).map((tag_moderno) => ({ tag_moderno })),
+
+              stato_conservazione: intersect(
+                parseStringArray(datum, 'stato_conservazione_globale'),
+                stati_conservazione,
               ),
-              destinazioni_uso: destinazioni_uso_2022.map((tag_moderno) => ({ tag_moderno })),
-              stato_conservazione: stati_conservazione_globale,
+
+              accessibilita: intersect(
+                parseStringArray(datum, 'accessibilità'),
+                accessibilita_edificio,
+              ),
             },
             {
               anno: '1951',
               particella: parseString(datum, 'cat 1951'),
-              destinazioni_uso: destinazioni_uso_1951.map((tag_storico) => ({ tag_storico })),
               stato: 'presente',
+              destinazioni_uso: intersect(
+                parseStringArray(datum, 'dest uso 1950'),
+                tag_storici_1951,
+              ).map((tag_storico) => ({ tag_storico })),
             },
             {
               anno: '1853',
               particella: parseString(datum, 'cat 1853'),
-              destinazioni_uso: destinazioni_uso_1853.map((tag_storico) => ({ tag_storico })),
               stato: 'presente',
+              destinazioni_uso: intersect(
+                parseStringArray(datum, 'dest uso 1853'),
+                tag_storici_1853,
+              ).map((tag_storico) => ({ tag_storico })),
             },
             {
               anno: '1807',
-              stato: stato_1807,
+              stato: find(parseString(datum, 'cat 1807'), stati_censimento_1807),
+            },
+          ],
+          analisi_strutturale: [
+            {
+              componente: 'componenti strutturali verticali',
+              materiali: intersect(
+                parseStringArray(datum, 'componenti strutturali verticali - materiale'),
+                materiali_strutturali['componenti strutturali verticali'],
+              ),
+              tecnica_costruttiva: find(
+                parseString(datum, 'componenti verticali - tecnica costruttiva'),
+                tecniche_costruttive_strutturali['componenti strutturali verticali'],
+              ),
+              stato_conservazione: find(
+                parseString(datum, 'componenti verticali - conservazione'),
+                stati_conservazione,
+              ),
+              fenomeni_degrado: intersect(
+                parseStringArray(datum, 'componenti verticali - conservazione'),
+                fenomeni_degrado_strutturali,
+              ),
+            },
+            {
+              componente: 'componenti strutturali orizzontali',
+              materiali: intersect(
+                parseStringArray(datum, 'componenti strutturali verticali - materiale'),
+                materiali_strutturali['componenti strutturali verticali'],
+              ),
+              tecnica_costruttiva: find(
+                parseString(datum, 'componenti verticali - tecnica costruttiva'),
+                tecniche_costruttive_strutturali['componenti strutturali verticali'],
+              ),
             },
           ],
         },
@@ -210,4 +235,16 @@ function removeNotionUrl(string: string) {
 function parseString(record: Record<string, unknown>, key: string) {
   if (!(key in record)) throw new Error('No key in record')
   return String(record[key]).trim()
+}
+
+function parseStringArray(record: Record<string, unknown>, key: string, separator = ',') {
+  return parseString(record, key).split(separator).map(S.trim)
+}
+
+function find<A extends readonly string[]>(string: string, array: A): A[number] | undefined {
+  return array.find((s) => s == string)
+}
+
+function intersect<A extends readonly string[]>(strings: string[], array: A): A[number][] {
+  return A.intersection(strings, array)
 }

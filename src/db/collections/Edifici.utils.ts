@@ -100,7 +100,7 @@ export const componenti_strutturali = [
   'fondazioni',
 ] as const
 
-type ComponenteStrutturale = (typeof componenti_strutturali)[number]
+export type ComponenteStrutturale = (typeof componenti_strutturali)[number]
 
 export const materiali_strutturali = {
   'componenti strutturali verticali': [
@@ -108,7 +108,7 @@ export const materiali_strutturali = {
     'pietra con legante',
     'legno',
     'calcestruzzo armato',
-    'laterizio',
+    'laterizi',
     'non rilevabile',
   ],
   'componenti strutturali orizzontali': [
@@ -221,3 +221,12 @@ export const componenti_architettoniche = {
   string,
   { tipologia: string[]; materiali: string[]; fenomeni_degrado: string[] }
 >
+
+//
+
+export const accessibilita_edificio = [
+  'sentiero',
+  'vicolo pedonale',
+  'strada carrabile',
+  'strada in terra battuta',
+] as const

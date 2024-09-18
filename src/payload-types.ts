@@ -100,7 +100,7 @@ export interface Edifici {
         anno?: string | null;
         particella?: string | null;
         subalterno?: string | null;
-        accessibilita?: ('sentiero' | 'vicolo pedonale' | 'strada carrabile' | 'strada in terra battuta ') | null;
+        accessibilita?: ('sentiero' | 'vicolo pedonale' | 'strada carrabile' | 'strada in terra battuta')[] | null;
         unita?:
           | {
               piani?: number | null;
@@ -213,10 +213,9 @@ export interface Edifici {
               | 'pietra con legante'
               | 'legno'
               | 'calcestruzzo armato'
-              | 'laterizio'
+              | 'laterizi'
               | 'non rilevabile'
               | 'pietra'
-              | 'laterizi'
               | 'non rilevabile '
               | 'materiale plastico'
               | 'materiale metallico'

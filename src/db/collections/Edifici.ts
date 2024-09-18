@@ -1,6 +1,7 @@
 import type { CollectionConfig, SelectField } from 'payload'
 import { Collections } from '.'
 import {
+  accessibilita_edificio,
   componenti_architettoniche,
   componenti_strutturali,
   fenomeni_degrado_strutturali,
@@ -63,7 +64,8 @@ export const Edifici: CollectionConfig = {
         {
           name: 'accessibilita',
           type: 'select',
-          options: ['sentiero', 'vicolo pedonale', 'strada carrabile', 'strada in terra battuta '],
+          options: Object.values(accessibilita_edificio),
+          hasMany: true,
         },
         {
           name: 'unita',
