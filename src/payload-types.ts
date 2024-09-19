@@ -100,7 +100,7 @@ export interface Edifici {
         anno?: string | null;
         particella?: string | null;
         subalterno?: string | null;
-        accessibilita?: ('sentiero' | 'vicolo pedonale' | 'strada carrabile' | 'strada in terra battuta ') | null;
+        accessibilita?: ('sentiero' | 'vicolo pedonale' | 'strada carrabile' | 'strada in terra battuta')[] | null;
         unita?:
           | {
               piani?: number | null;
@@ -118,11 +118,13 @@ export interface Edifici {
           | null;
         stato_conservazione?:
           | (
-              | 'perdita funzionalità'
               | 'fenomeni di degrado diffusi'
               | 'fenomeni di degrado superficiali'
-              | 'senza fenomeni di degrado'
               | 'modifiche sostanziali caratteri tradizionali'
+              | 'non presente'
+              | 'non rilevabile'
+              | 'perdita funzionalità'
+              | 'senza fenomeni di degrado'
             )[]
           | null;
         destinazioni_uso?:
@@ -151,13 +153,15 @@ export interface Edifici {
                     | 'CHECK - ND'
                     | 'COLTIVO'
                     | 'DOGANA'
-                    | 'ED REL'
+                    | 'ED RELIGIOSO'
                     | 'F'
                     | 'FIENILE'
                     | 'LT ABB'
                     | 'LT'
                     | 'luogo superiore'
                     | 'MULINO'
+                    | 'nd'
+                    | 'NP'
                     | 'P CANTINA'
                     | 'P CASA ABB'
                     | 'P CASA'
@@ -169,6 +173,7 @@ export interface Edifici {
                     | 'P SF'
                     | 'P STALLA'
                     | 'PASCOLO'
+                    | 'PCC'
                     | 'PRATO'
                     | 'S'
                     | 'SASSO N'
@@ -176,7 +181,6 @@ export interface Edifici {
                     | 'STALLA'
                     | 'ZAPPATIVO'
                     | 'ZERBO'
-                    | 'NP'
                     | 'URBANO'
                     | 'FA URBANO'
                     | 'PFA RURALE'
@@ -185,14 +189,15 @@ export interface Edifici {
                 | null;
               tag_moderno?:
                 | (
-                    | 'residenziale'
-                    | 'multifunzione'
                     | 'commerciale'
-                    | 'produttivo rurale'
-                    | 'produttivo industriale'
-                    | 'servizio'
-                    | 'non rilevabile'
                     | 'luogo di culto'
+                    | 'multifunzione'
+                    | 'non rilevabile'
+                    | 'produttivo'
+                    | 'produttivo industriale'
+                    | 'produttivo rurale'
+                    | 'residenziale'
+                    | 'servizio'
                   )
                 | null;
               id?: string | null;
@@ -204,23 +209,19 @@ export interface Edifici {
     | null;
   analisi_strutturale?:
     | {
-        componente?:
-          | ('componenti strutturali verticali' | 'componenti strutturali orizzontali' | 'coperture' | 'fondazioni')
-          | null;
+        componente?: ('verticali' | 'orizzontali' | 'coperture' | 'fondazioni') | null;
         materiali?:
           | (
+              | 'calcestruzzo armato'
+              | 'laterizi'
+              | 'legno'
+              | 'non rilevabile'
               | 'pietra a secco'
               | 'pietra con legante'
-              | 'legno'
-              | 'calcestruzzo armato'
-              | 'laterizio'
-              | 'non rilevabile'
-              | 'pietra'
-              | 'laterizi'
-              | 'non rilevabile '
-              | 'materiale plastico'
-              | 'materiale metallico'
               | 'non presente'
+              | 'pietra'
+              | 'materiale metallico'
+              | 'materiale plastico'
               | 'altro'
             )[]
           | null;
@@ -234,35 +235,42 @@ export interface Edifici {
               | 'a telaio'
               | 'volte'
               | 'altra tecnica'
+              | 'non presente'
               | 'tecnica moderna'
               | 'tecnica tradizionale'
             )
           | null;
         stato_conservazione?:
           | (
-              | 'perdita funzionalità'
               | 'fenomeni di degrado diffusi'
               | 'fenomeni di degrado superficiali'
-              | 'senza fenomeni di degrado'
               | 'modifiche sostanziali caratteri tradizionali'
+              | 'non presente'
+              | 'non rilevabile'
+              | 'perdita funzionalità'
+              | 'senza fenomeni di degrado'
             )
           | null;
         fenomeni_degrado?:
           | (
               | 'corrosione elementi metallici'
+              | 'corrosione componenti metallici'
               | 'deposito superficiale'
+              | 'erosione / deformazione elementi strutturali lignei'
               | 'erosione elementi lignei strutturali'
               | 'erosione giunti di malta'
               | 'fessurazioni'
               | 'mancanza componenti strutturali'
+              | 'mancanza elementi puntuali'
               | 'mancanza elementi singoli'
+              | 'mancanza elementi strutturali puntuali (conci lapidei, elementi lignei)'
               | 'mancanza elementi strutturali'
               | 'marcescenza componenti strutturali lignee'
               | 'marcescenza elementi lignei strutturali'
               | 'patina biologica'
               | 'rappezzi cementizi'
+              | 'umidità di risalita'
               | 'vegetazione infestante'
-              | 'mancanza elementi strutturali puntuali (conci lapidei, elementi lignei)'
             )[]
           | null;
         id?: string | null;
@@ -274,10 +282,12 @@ export interface Edifici {
         componente?: ('finiture esterne' | 'infissi esterni' | 'apparati decorativi' | 'collegamenti esterni') | null;
         tipologia?:
           | (
-              | 'intonaco_tintura'
               | 'intonaco_fine'
               | 'intonaco_rustico'
-              | 'non_presente'
+              | 'intonaco_tintura'
+              | 'non presente'
+              | 'rivestiment in pietra (basamento)'
+              | 'rivestimento in legno'
               | 'porte'
               | 'portone'
               | 'grate'
@@ -286,96 +296,109 @@ export interface Edifici {
               | 'finestre'
               | 'persiane / scuri'
               | 'tapparelle'
+              | 'angolari in conci lapidei'
+              | 'architravi lapidei'
+              | 'architravi lignei'
+              | 'cornici lapidee o tinte'
               | 'dipinti - affreschi'
+              | 'finestre a sguincio'
               | 'iscrizioni storiche'
               | 'marcapiano'
-              | 'cornici lapidee o tinte'
-              | 'finestre a sguincio'
-              | 'architravi lignei'
-              | 'architravi lapidei'
-              | 'angolari in conci lapidei'
               | 'ballatoio'
               | 'loggia'
               | 'scale'
               | 'sottopassaggio'
               | 'balcone'
-            )
+            )[]
           | null;
         materiali?:
           | (
+              | 'malta cementizia (grigia)'
               | 'malta di calce (bianca - aerea)'
               | 'malta di calce (giallastra - idraulica)'
-              | 'malta cementizia (grigia)'
               | 'legno'
               | 'materiale plastico'
               | 'metallo'
               | 'pietra'
               | 'calcestruzzo armato'
-            )
+            )[]
           | null;
         stato_conservazione?:
           | (
-              | 'perdita funzionalità'
               | 'fenomeni di degrado diffusi'
               | 'fenomeni di degrado superficiali'
-              | 'senza fenomeni di degrado'
               | 'modifiche sostanziali caratteri tradizionali'
+              | 'non presente'
+              | 'non rilevabile'
+              | 'perdita funzionalità'
+              | 'senza fenomeni di degrado'
             )
           | null;
         fenomeni_degrado?:
           | (
+              | 'colature'
+              | 'corrosione elementi metallici'
               | 'deposito superficiale'
-              | 'disgregazione malta di rivestimento'
               | 'erosione malta di rivestimento'
-              | 'lacuna malta di rivestimento'
+              | 'disgregazione malta di rivestimento'
               | 'erosione giunti di malta'
               | 'fessurazioni'
+              | 'lacuna malta di rivestimento'
               | 'marcescenza legno'
               | 'patina biologica'
-              | 'colature'
               | 'rappezzi cementizi'
               | 'umidità di risalita'
-              | 'corrosione elementi metallici'
             )[]
           | null;
         id?: string | null;
       }[]
     | null;
-  Altro?: {
-    pavimentazioni_esterne?: ('terra battuta' | 'ceramica' | 'pietra' | 'strada carrabile')[] | null;
+  altro?: {
+    pavimentazioni_esterne?: ('ceramica' | 'pietra' | 'strada carrabile' | 'terra battuta')[] | null;
     smaltimento_acqua?: ('metallo' | 'legno' | 'non rilevabile' | 'non presente')[] | null;
-    impiantistica?: ('idrico sanitario' | 'idrico' | 'elettrico' | 'gas' | 'non rilevabile' | 'non presente')[] | null;
-    presenza_opere_provvisionali?:
+    impiantistica?: ('elettrico' | 'gas' | 'idrico sanitario' | 'idrico' | 'non presente' | 'non rilevabile')[] | null;
+    opere_provvisionali?:
       | ('scatola muraria (tiranti, puntellature, centine)' | 'coperture provvisorie' | 'altro')[]
       | null;
     vincoli_tutele?: ('I1' | 'I2' | 'I3' | 'I4' | 'I5' | 'LOCALE' | 'REGIONALE' | 'NAZIONALE')[] | null;
     caratteri_storico_culturali?:
       | (
           | 'cardèn (struttura in legno incardinata)'
-          | 'solè (parziale cardèn a valle)'
-          | 'pigna'
-          | 'scigugna / culdera (produzione casearia)'
-          | 'stua interna'
           | 'casèl (conservazione latte)'
-          | 'tabìa (stalla / fienile con pilastri / tamponatura in legno'
           | 'crapèna - tècc (fienile)'
-          | 'crotto (addossato alla montagna - sorèl)'
-          | 'grè (essicatoio castagne)'
-          | 'stalla fienile'
-          | 'pilastri basamento'
-          | 'fienile'
+          | 'crotto'
           | 'edificio rurale in pietra (stalla / fienile o gre)'
+          | 'fienile'
+          | 'grè (essicatoio castagne)'
+          | 'pigna'
+          | 'pilastri basamento'
+          | 'scigugna / culdera (produzione casearia)'
+          | 'solè (parziale cardèn a valle)'
+          | 'stalla fienile'
+          | 'stua interna'
+          | 'tabìa (stalla / fienile con pilastri / tamponatura in legno)'
         )[]
       | null;
   };
   dati_lavoro?: {
-    imu_2021?: string | null;
+    imu_2021?:
+      | {
+          code?: string | null;
+          id?: string | null;
+        }[]
+      | null;
     tari_2021?: string | null;
     punto_gis?: string | null;
     altre_note?: string | null;
     informazioni_aggiuntive?: string | null;
   };
   immagini?: (string | Media)[] | null;
+  immagini_url?:
+    | {
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }

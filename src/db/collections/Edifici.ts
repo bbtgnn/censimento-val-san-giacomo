@@ -1,17 +1,21 @@
 import type { CollectionConfig, SelectField } from 'payload'
 import { Collections } from '.'
 import {
+  accessibilita_edificio,
   componenti_architettoniche,
   componenti_strutturali,
   fenomeni_degrado_strutturali,
-  materiali_strutturali,
   stati_censimento_1807,
   stati_conservazione,
   stati_utilizzo,
-  tag_moderni,
-  tag_storici_1853,
-  tag_storici_1951,
-  tecniche_costruttive_strutturali,
+  destinazioni_uso_moderno,
+  destinazioni_uso_1853,
+  destinazioni_uso_1951,
+  caratteri_storico_culturali,
+  pavimentazioni_esterne,
+  impiantistica,
+  opere_provvisionali,
+  vincoli_tutele,
 } from './Edifici.utils'
 import * as F from '@/db/fields'
 
@@ -63,7 +67,8 @@ export const Edifici: CollectionConfig = {
         {
           name: 'accessibilita',
           type: 'select',
-          options: ['sentiero', 'vicolo pedonale', 'strada carrabile', 'strada in terra battuta '],
+          options: Object.values(accessibilita_edificio),
+          hasMany: true,
         },
         {
           name: 'unita',
@@ -102,12 +107,15 @@ export const Edifici: CollectionConfig = {
             {
               name: 'tag_storico',
               type: 'select',
-              options: [...Object.values(tag_storici_1853), ...Object.values(tag_storici_1951)],
+              options: [
+                ...Object.values(destinazioni_uso_1853),
+                ...Object.values(destinazioni_uso_1951),
+              ],
             },
             {
               name: 'tag_moderno',
               type: 'select',
-              options: Object.values(tag_moderni),
+              options: Object.values(destinazioni_uso_moderno),
             },
           ],
         },
@@ -129,18 +137,22 @@ export const Edifici: CollectionConfig = {
         {
           name: 'componente',
           type: 'select',
-          options: Object.values(componenti_strutturali),
+          options: Object.keys(componenti_strutturali),
         },
         {
           name: 'materiali',
           type: 'select',
-          options: Object.values(materiali_strutturali).flat(),
+          options: Object.values(componenti_strutturali)
+            .map((d) => d.materiali)
+            .flat(),
           hasMany: true,
         },
         {
           name: 'tecnica_costruttiva',
           type: 'select',
-          options: Object.values(tecniche_costruttive_strutturali).flat(),
+          options: Object.values(componenti_strutturali)
+            .map((d) => d.tecniche)
+            .flat(),
         },
         field_conservazione,
         {
@@ -172,6 +184,7 @@ export const Edifici: CollectionConfig = {
           options: Object.values(componenti_architettoniche)
             .map((v) => v.tipologia)
             .flat(),
+          hasMany: true,
         },
         {
           name: 'materiali',
@@ -179,6 +192,7 @@ export const Edifici: CollectionConfig = {
           options: Object.values(componenti_architettoniche)
             .map((v) => v.materiali)
             .flat(),
+          hasMany: true,
         },
         field_conservazione,
         {
@@ -193,13 +207,13 @@ export const Edifici: CollectionConfig = {
     },
 
     {
-      name: 'Altro',
+      name: 'altro',
       type: 'group',
       fields: [
         {
           name: 'pavimentazioni_esterne',
           type: 'select',
-          options: ['terra battuta', 'ceramica', 'pietra', 'strada carrabile'],
+          options: Object.values(pavimentazioni_esterne),
           hasMany: true,
         },
         {
@@ -211,52 +225,26 @@ export const Edifici: CollectionConfig = {
         {
           name: 'impiantistica',
           type: 'select',
-          options: [
-            'idrico sanitario',
-            'idrico',
-            'elettrico',
-            'gas',
-            'non rilevabile',
-            'non presente',
-          ],
+          options: Object.values(impiantistica),
           hasMany: true,
         },
         {
-          name: 'presenza_opere_provvisionali',
+          name: 'opere_provvisionali',
           type: 'select',
           hasMany: true,
-          options: [
-            'scatola muraria (tiranti, puntellature, centine)',
-            'coperture provvisorie',
-            'altro',
-          ],
+          options: Object.values(opere_provvisionali),
         },
         {
           name: 'vincoli_tutele',
           type: 'select',
           hasMany: true,
-          options: ['I1', 'I2', 'I3', 'I4', 'I5', 'LOCALE', 'REGIONALE', 'NAZIONALE'],
+          options: Object.values(vincoli_tutele),
         },
         {
           name: 'caratteri_storico_culturali',
           type: 'select',
           hasMany: true,
-          options: [
-            'cardèn (struttura in legno incardinata)',
-            'solè (parziale cardèn a valle)',
-            'pigna',
-            'scigugna / culdera (produzione casearia)',
-            'stua interna',
-            'casèl (conservazione latte)',
-            'tabìa (stalla / fienile con pilastri / tamponatura in legno',
-            'crapèna - tècc (fienile)',
-            'crotto (addossato alla montagna - sorèl)',
-            'grè (essicatoio castagne)',
-            'stalla fienile',
-            'pilastri basamento',
-            'fienile',
-            'edificio rurale in pietra (stalla / fienile o gre)',
-          ],
+          options: Object.values(caratteri_storico_culturali),
         },
       ],
     },
@@ -268,7 +256,8 @@ export const Edifici: CollectionConfig = {
       fields: [
         {
           name: 'imu_2021',
-          type: 'text',
+          type: 'array',
+          fields: [{ name: 'code', type: 'text' }],
         },
         {
           name: 'tari_2021',
@@ -292,6 +281,11 @@ export const Edifici: CollectionConfig = {
     {
       ...F.relation('media', 'immagini'),
       hasMany: true,
+    },
+    {
+      name: 'immagini_url',
+      type: 'array',
+      fields: [{ name: 'url', type: 'text' }],
     },
   ],
 }
