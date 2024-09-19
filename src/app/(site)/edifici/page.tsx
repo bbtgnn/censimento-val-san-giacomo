@@ -69,7 +69,7 @@ function EdificioRow({ edificio }: { edificio: Edifici }) {
     .join(', ')
   const stato_utilizzo = anagrafica_2022?.stato_utilizzo
 
-  const analisi_verticale = getAnalisiStrutturale(edificio, 'componenti strutturali verticali')
+  const analisi_verticale = getAnalisiStrutturale(edificio, 'verticali')
 
   return (
     <tr>

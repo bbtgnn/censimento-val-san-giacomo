@@ -8,25 +8,28 @@ export const stati_utilizzo = [
 ] as const
 
 export const stati_conservazione = [
-  'perdita funzionalità',
   'fenomeni di degrado diffusi',
   'fenomeni di degrado superficiali',
-  'senza fenomeni di degrado',
   'modifiche sostanziali caratteri tradizionali',
-] as const
-
-export const tag_moderni = [
-  'residenziale',
-  'multifunzione',
-  'commerciale',
-  'produttivo rurale',
-  'produttivo industriale',
-  'servizio',
+  'non presente',
   'non rilevabile',
-  'luogo di culto',
+  'perdita funzionalità',
+  'senza fenomeni di degrado',
 ] as const
 
-export const tag_storici_1951 = [
+export const destinazioni_uso_moderno = [
+  'commerciale',
+  'luogo di culto',
+  'multifunzione',
+  'non rilevabile',
+  'produttivo',
+  'produttivo industriale',
+  'produttivo rurale',
+  'residenziale',
+  'servizio',
+] as const
+
+export const destinazioni_uso_1951 = [
   'PRATO',
   'NP',
   'URBANO',
@@ -35,7 +38,7 @@ export const tag_storici_1951 = [
   'FA RURALE',
 ] as const
 
-export const tag_storici_1853 = [
+export const destinazioni_uso_1853 = [
   'A CASA DIR',
   'BOSCO CEDU',
   'CANTINA D',
@@ -57,13 +60,15 @@ export const tag_storici_1853 = [
   'CHECK - ND',
   'COLTIVO',
   'DOGANA',
-  'ED REL',
+  'ED RELIGIOSO',
   'F',
   'FIENILE',
   'LT ABB',
   'LT',
   'luogo superiore',
   'MULINO',
+  'nd',
+  'NP',
   'P CANTINA',
   'P CASA ABB',
   'P CASA',
@@ -75,6 +80,7 @@ export const tag_storici_1853 = [
   'P SF',
   'P STALLA',
   'PASCOLO',
+  'PCC',
   'PRATO',
   'S',
   'SASSO N',
@@ -91,97 +97,110 @@ export const stati_censimento_1807 = [
   'parziale',
 ] as const
 
-//
+/* Componenti strutturali */
 
-export const componenti_strutturali = [
-  'componenti strutturali verticali',
-  'componenti strutturali orizzontali',
-  'coperture',
-  'fondazioni',
-] as const
+export const componenti_strutturali = {
+  verticali: {
+    materiali: [
+      'calcestruzzo armato',
+      'laterizi',
+      'legno',
+      'non rilevabile',
+      'pietra a secco',
+      'pietra con legante',
+    ],
+    tecniche: [
+      'a telaio ',
+      'incardinato',
+      'incardinato + basamento e/o parziale rivestimento in pietra',
+      'muri portanti',
+      'non rilevabile',
+    ],
+  },
+  orizzontali: {
+    materiali: [
+      'calcestruzzo armato',
+      'laterizi',
+      'legno',
+      'non presente',
+      'non rilevabile',
+      'pietra',
+    ],
+    tecniche: ['a telaio', 'volte', 'altra tecnica', 'non rilevabile', 'non presente'],
+  },
+  coperture: {
+    materiali: [
+      'calcestruzzo armato',
+      'laterizi',
+      'legno',
+      'materiale metallico',
+      'materiale plastico',
+      'non presente',
+      'non rilevabile',
+      'pietra',
+    ],
+    tecniche: ['non presente', 'non rilevabile', 'tecnica moderna', 'tecnica tradizionale'],
+  },
+  fondazioni: {
+    materiali: ['non rilevabile', 'non presente', 'altro'],
+    tecniche: ['non rilevabile'],
+  },
+} as const satisfies Record<string, { tecniche: string[]; materiali: string[] }>
 
-export type ComponenteStrutturale = (typeof componenti_strutturali)[number]
-
-export const materiali_strutturali = {
-  'componenti strutturali verticali': [
-    'pietra a secco',
-    'pietra con legante',
-    'legno',
-    'calcestruzzo armato',
-    'laterizi',
-    'non rilevabile',
-  ],
-  'componenti strutturali orizzontali': [
-    'pietra',
-    'legno',
-    'laterizi',
-    'calcestruzzo armato',
-    'non rilevabile ',
-  ],
-  coperture: [
-    'pietra',
-    'legno',
-    'calcestruzzo armato',
-    'materiale plastico',
-    'materiale metallico',
-    'non rilevabile',
-  ],
-  fondazioni: ['non rilevabile', 'non presente', 'altro'],
-} as const satisfies Record<ComponenteStrutturale, string[]>
-
-export const tecniche_costruttive_strutturali = {
-  'componenti strutturali verticali': [
-    'a telaio ',
-    'incardinato',
-    'incardinato + basamento e/o parziale rivestimento in pietra',
-    'muri portanti',
-    'non rilevabile',
-  ],
-  'componenti strutturali orizzontali': ['a telaio', 'volte', 'altra tecnica', 'non rilevabile'],
-  coperture: ['tecnica moderna', 'tecnica tradizionale', 'non rilevabile'],
-  fondazioni: ['non rilevabile'],
-} as const satisfies Record<ComponenteStrutturale, string[]>
+export type ComponenteStrutturale = keyof typeof componenti_strutturali
 
 export const fenomeni_degrado_strutturali = [
   'corrosione elementi metallici',
+  'corrosione componenti metallici',
   'deposito superficiale',
+  'erosione / deformazione elementi strutturali lignei',
   'erosione elementi lignei strutturali',
   'erosione giunti di malta',
   'fessurazioni',
   'mancanza componenti strutturali',
+  'mancanza elementi puntuali',
   'mancanza elementi singoli',
+  'mancanza elementi strutturali puntuali (conci lapidei, elementi lignei)',
   'mancanza elementi strutturali',
   'marcescenza componenti strutturali lignee',
   'marcescenza elementi lignei strutturali',
   'patina biologica',
   'rappezzi cementizi',
+  'umidità di risalita',
   'vegetazione infestante',
-  'mancanza elementi strutturali puntuali (conci lapidei, elementi lignei)',
 ] as const
 
-//
+/* Componenti architettoniche */
 
 export const componenti_architettoniche = {
   'finiture esterne': {
-    tipologia: ['intonaco_tintura', 'intonaco_fine', 'intonaco_rustico', 'non_presente'],
+    tipologia: [
+      'intonaco_fine',
+      'intonaco_rustico',
+      'intonaco_tintura',
+      'non presente',
+      'rivestiment in pietra (basamento)',
+      'rivestimento in legno',
+    ],
     materiali: [
+      'malta cementizia (grigia)',
       'malta di calce (bianca - aerea)',
       'malta di calce (giallastra - idraulica)',
-      'malta cementizia (grigia)',
     ],
     fenomeni_degrado: [
+      'colature',
+      'corrosione elementi metallici',
       'deposito superficiale',
-      'disgregazione malta di rivestimento',
       'erosione malta di rivestimento',
-      'lacuna malta di rivestimento',
+      'disgregazione malta di rivestimento',
       'erosione giunti di malta',
+      'erosione malta di rivestimento',
       'fessurazioni',
+      'lacuna malta di rivestimento',
       'marcescenza legno',
       'patina biologica',
-      'colature',
       'rappezzi cementizi',
       'umidità di risalita',
-      'corrosione elementi metallici',
     ],
   },
   'infissi esterni': {
@@ -200,14 +219,14 @@ export const componenti_architettoniche = {
   },
   'apparati decorativi': {
     tipologia: [
+      'angolari in conci lapidei',
+      'architravi lapidei',
+      'architravi lignei',
+      'cornici lapidee o tinte',
       'dipinti - affreschi',
+      'finestre a sguincio',
       'iscrizioni storiche',
       'marcapiano',
-      'cornici lapidee o tinte',
-      'finestre a sguincio',
-      'architravi lignei',
-      'architravi lapidei',
-      'angolari in conci lapidei',
     ],
     materiali: [],
     fenomeni_degrado: [],
@@ -229,4 +248,54 @@ export const accessibilita_edificio = [
   'vicolo pedonale',
   'strada carrabile',
   'strada in terra battuta',
+] as const
+
+export const caratteri_storico_culturali = [
+  'cardèn (struttura in legno incardinata)',
+  'casèl (conservazione latte)',
+  'crapèna - tècc (fienile)',
+  'crotto',
+  'edificio rurale in pietra (stalla / fienile o gre)',
+  'fienile',
+  'grè (essicatoio castagne)',
+  'pigna',
+  'pilastri basamento',
+  'scigugna / culdera (produzione casearia)',
+  'solè (parziale cardèn a valle)',
+  'stalla fienile',
+  'stua interna',
+  'tabìa (stalla / fienile con pilastri / tamponatura in legno)',
+] as const
+
+export const pavimentazioni_esterne = [
+  'ceramica',
+  'pietra',
+  'strada carrabile',
+  'terra battuta',
+] as const
+
+export const impiantistica = [
+  'elettrico',
+  'gas',
+  'idrico sanitario',
+  'idrico',
+  'non presente',
+  'non rilevabile',
+] as const
+
+export const opere_provvisionali = [
+  'scatola muraria (tiranti, puntellature, centine)',
+  'coperture provvisorie',
+  'altro',
+] as const
+
+export const vincoli_tutele = [
+  'I1',
+  'I2',
+  'I3',
+  'I4',
+  'I5',
+  'LOCALE',
+  'REGIONALE',
+  'NAZIONALE',
 ] as const

@@ -7,15 +7,20 @@ import * as csv from '@fast-csv/parse'
 import { Array as A, Effect, Option, pipe, String as S } from 'effect'
 import {
   accessibilita_edificio,
-  fenomeni_degrado_strutturali,
-  materiali_strutturali,
   stati_censimento_1807,
   stati_conservazione,
   stati_utilizzo,
-  tag_moderni,
-  tag_storici_1853,
-  tag_storici_1951,
-  tecniche_costruttive_strutturali,
+  destinazioni_uso_moderno,
+  destinazioni_uso_1853,
+  destinazioni_uso_1951,
+  componenti_strutturali,
+  caratteri_storico_culturali,
+  componenti_architettoniche,
+  pavimentazioni_esterne,
+  impiantistica,
+  opere_provvisionali,
+  fenomeni_degrado_strutturali,
+  vincoli_tutele,
 } from '@/db/collections/Edifici.utils'
 
 const filename = fileURLToPath(import.meta.url)
@@ -124,6 +129,7 @@ async function seed() {
         data: {
           localita: localita?.id,
           sezione_localita: sezione_localita?.id,
+
           anagrafica: [
             {
               anno: '2022',
@@ -132,7 +138,7 @@ async function seed() {
 
               destinazioni_uso: intersect(
                 parseStringArray(datum, 'destinazione_uso_attuale'),
-                tag_moderni,
+                destinazioni_uso_moderno,
               ).map((tag_moderno) => ({ tag_moderno })),
 
               stato_conservazione: intersect(
@@ -151,7 +157,7 @@ async function seed() {
               stato: 'presente',
               destinazioni_uso: intersect(
                 parseStringArray(datum, 'dest uso 1950'),
-                tag_storici_1951,
+                destinazioni_uso_1951,
               ).map((tag_storico) => ({ tag_storico })),
             },
             {
@@ -160,7 +166,7 @@ async function seed() {
               stato: 'presente',
               destinazioni_uso: intersect(
                 parseStringArray(datum, 'dest uso 1853'),
-                tag_storici_1853,
+                destinazioni_uso_1853,
               ).map((tag_storico) => ({ tag_storico })),
             },
             {
@@ -168,38 +174,123 @@ async function seed() {
               stato: find(parseString(datum, 'cat 1807'), stati_censimento_1807),
             },
           ],
+
           analisi_strutturale: [
             {
-              componente: 'componenti strutturali verticali',
+              componente: 'verticali',
               materiali: intersect(
                 parseStringArray(datum, 'componenti strutturali verticali - materiale'),
-                materiali_strutturali['componenti strutturali verticali'],
+                componenti_strutturali.verticali.materiali,
               ),
               tecnica_costruttiva: find(
                 parseString(datum, 'componenti verticali - tecnica costruttiva'),
-                tecniche_costruttive_strutturali['componenti strutturali verticali'],
+                componenti_strutturali.verticali.tecniche,
               ),
               stato_conservazione: find(
                 parseString(datum, 'componenti verticali - conservazione'),
                 stati_conservazione,
               ),
               fenomeni_degrado: intersect(
-                parseStringArray(datum, 'componenti verticali - conservazione'),
+                parseStringArray(datum, 'fenomeni_degrado_strutturali_verticali'),
                 fenomeni_degrado_strutturali,
               ),
             },
             {
-              componente: 'componenti strutturali orizzontali',
+              componente: 'coperture',
               materiali: intersect(
-                parseStringArray(datum, 'componenti strutturali verticali - materiale'),
-                materiali_strutturali['componenti strutturali verticali'],
+                parseStringArray(datum, 'componenti - coperture - materiale'),
+                componenti_strutturali.coperture.materiali,
               ),
               tecnica_costruttiva: find(
-                parseString(datum, 'componenti verticali - tecnica costruttiva'),
-                tecniche_costruttive_strutturali['componenti strutturali verticali'],
+                parseString(datum, 'componenti - coperture - tecnica costruttiva'),
+                componenti_strutturali.coperture.tecniche,
+              ),
+              stato_conservazione: find(
+                parseString(datum, 'componenti - coperture - conservazione'),
+                stati_conservazione,
+              ),
+              fenomeni_degrado: intersect(
+                parseStringArray(datum, 'fenomeni_degrado_strutturali_coperture'),
+                fenomeni_degrado_strutturali,
+              ),
+            },
+            {
+              componente: 'orizzontali',
+              materiali: intersect(
+                parseStringArray(datum, 'componenti strutturali orizzontali - materiale'),
+                componenti_strutturali.orizzontali.materiali,
+              ),
+              tecnica_costruttiva: find(
+                parseString(datum, 'componenti strutturali orizzontali - tecnica costruttiva'),
+                componenti_strutturali.orizzontali.tecniche,
+              ),
+              stato_conservazione: find(
+                parseString(datum, 'componenti strutturali orizzontali - conservazione'),
+                stati_conservazione,
+              ),
+            },
+            {
+              componente: 'fondazioni',
+              materiali: intersect(
+                parseStringArray(datum, 'componenti - fondazioni'),
+                componenti_strutturali.fondazioni.materiali,
               ),
             },
           ],
+
+          analisi_componenti_architettoniche: [
+            {
+              componente: 'finiture esterne',
+              fronte: 'generale',
+              tipologia: intersect(
+                parseStringArray(datum, 'finiture esterne - tipologia'),
+                componenti_architettoniche['finiture esterne'].tipologia,
+              ),
+              materiali: intersect(
+                parseStringArray(datum, 'finiture esterne - dettaglio materiale intonaco'),
+                componenti_architettoniche['finiture esterne'].materiali,
+              ),
+              stato_conservazione: find(
+                parseString(datum, 'finiture esterne - conservazione'),
+                stati_conservazione,
+              ),
+              fenomeni_degrado: intersect(
+                parseStringArray(datum, 'fenomeni_degrado_finiture esterne'),
+                componenti_architettoniche['finiture esterne'].fenomeni_degrado,
+              ),
+            },
+          ],
+
+          altro: {
+            caratteri_storico_culturali: intersect(
+              parseStringArray(datum, 'caratteri_storico_culturali'),
+              caratteri_storico_culturali,
+            ),
+
+            pavimentazioni_esterne: intersect(
+              parseStringArray(datum, 'pavimentazioni_esterne'),
+              pavimentazioni_esterne,
+            ),
+
+            impiantistica: intersect(parseStringArray(datum, 'impiantistica'), impiantistica),
+
+            opere_provvisionali: intersect(
+              parseStringArray(datum, 'presenza_opere_provvisionali'),
+              opere_provvisionali,
+            ),
+
+            vincoli_tutele: intersect(parseStringArray(datum, 'vincoli e tutele'), vincoli_tutele),
+          },
+
+          dati_lavoro: {
+            altre_note: parseString(datum, 'note - da tenere'),
+            imu_2021: parseStringArray(datum, 'IMU 2021 - da tenere').map((code) => ({ code })),
+            tari_2021: parseString(datum, 'TARI 2021 - da tenere'),
+          },
+
+          immagini_url: parseStringArray(datum, 'Immagini_fotografie sopralluogo').map((url) => ({
+            url,
+          })),
         },
       })
     }),
