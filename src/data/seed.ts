@@ -38,7 +38,7 @@ async function seed() {
   // Cleanup
 
   await pipe(
-    ['edifici', 'sottosistemi', 'localita', 'sezione_localita'] satisfies CollectionSlug[],
+    ['edifici', 'sottosistemi', 'localita', 'sezione_localita', 'media'] satisfies CollectionSlug[],
     A.map((slug) =>
       Effect.promise(() =>
         payload.delete({
