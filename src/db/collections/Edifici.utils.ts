@@ -27,6 +27,7 @@ export const destinazioni_uso_moderno = [
   'produttivo rurale',
   'residenziale',
   'servizio',
+  'servizio accessorio',
 ] as const
 
 export const destinazioni_uso_1951 = [

@@ -297,6 +297,62 @@ async function seed() {
     (data) => Promise.all(data),
   )
 
+  const edifici_kobo_breve_data = await readCsv(
+    filePath('censimento-versione-breve.csv'),
+    csvOptions,
+  )
+
+  const edifici_kobo_breve = pipe(
+    edifici_kobo_breve_data,
+    A.filter((datum) => parseString(datum, 'NOTION') == 'NO'),
+    A.map((datum) => {
+      const sottosistema = pipe(parseString(datum, 'sottosistema'), (nome_sottosistema) =>
+        sottosistemi_list.find((sott) => sott.name == nome_sottosistema),
+      )
+
+      const destinazioni_uso = destinazioni_uso_moderno.filter((d) => {
+        try {
+          return parseString(datum, `destinazione d'uso/${d}`) == '1'
+        } catch (e) {
+          console.log((e as Error).message)
+          return false
+        }
+      })
+
+      const stato_utilizzo = stati_utilizzo
+        .filter((d) => parseString(datum, `stato di utilizzo/${d}`) == '1')
+        .at(0)
+
+      const stato_conservazione = stati_conservazione.filter(
+        (d) => parseString(datum, `stato di conservazione generale/${d}`) == '1',
+      )
+
+      return payload.create({
+        collection: 'edifici',
+        data: {
+          anagrafica: [
+            {
+              anno: '2022',
+              particella: [
+                parseString(datum, 'foglio catastale'),
+                parseString(datum, 'particella catastale'),
+              ].join('_'),
+              destinazioni_uso: destinazioni_uso.map((tag_moderno) => ({ tag_moderno })),
+              stato_utilizzo,
+              stato_conservazione,
+            },
+          ],
+
+          immagini_url: [parseString(datum, 'generale_URL')].map((url) => ({ url })),
+
+          dati_lavoro: {
+            altre_note: parseString(datum, 'note'),
+          },
+        },
+      })
+    }),
+  )
+
   process.exit(0)
 }
 
@@ -324,7 +380,7 @@ function removeNotionUrl(string: string) {
 }
 
 function parseString(record: Record<string, unknown>, key: string) {
-  if (!(key in record)) throw new Error('No key in record')
+  if (!(key in record)) throw new Error(`No key in record: ${key}`)
   return String(record[key]).trim()
 }
 
@@ -338,4 +394,21 @@ function find<A extends readonly string[]>(string: string, array: A): A[number] 
 
 function intersect<A extends readonly string[]>(strings: string[], array: A): A[number][] {
   return A.intersection(strings, array)
+}
+
+//
+
+function dunno<A extends readonly string[]>(
+  array: A,
+  datum: Record<string, unknown>,
+  field: string,
+) {
+  return array.filter((arrayItem) => {
+    try {
+      return parseString(datum, `${field}/${arrayItem}`) == '1'
+    } catch (e) {
+      console.log((e as Error).message)
+      return false
+    }
+  })
 }

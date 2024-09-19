@@ -198,6 +198,7 @@ export interface Edifici {
                     | 'produttivo rurale'
                     | 'residenziale'
                     | 'servizio'
+                    | 'servizio accessorio'
                   )
                 | null;
               id?: string | null;
