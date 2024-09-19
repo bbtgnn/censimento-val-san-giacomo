@@ -310,22 +310,17 @@ async function seed() {
         sottosistemi_list.find((sott) => sott.name == nome_sottosistema),
       )
 
-      const destinazioni_uso = destinazioni_uso_moderno.filter((d) => {
-        try {
-          return parseString(datum, `destinazione d'uso/${d}`) == '1'
-        } catch (e) {
-          console.log((e as Error).message)
-          return false
-        }
-      })
-
-      const stato_utilizzo = stati_utilizzo
-        .filter((d) => parseString(datum, `stato di utilizzo/${d}`) == '1')
-        .at(0)
-
-      const stato_conservazione = stati_conservazione.filter(
-        (d) => parseString(datum, `stato di conservazione generale/${d}`) == '1',
+      const destinazioni_uso = parseKoboMultiselect(
+        destinazioni_uso_moderno,
+        datum,
+        "destinazione d'uso",
       )
+      const stato_conservazione = parseKoboMultiselect(
+        stati_conservazione,
+        datum,
+        'stato di conservazione generale',
+      )
+      const stato_utilizzo = parseKoboMultiselect(stati_utilizzo, datum, 'stato di utilizzo').at(0)
 
       return payload.create({
         collection: 'edifici',
@@ -398,11 +393,11 @@ function intersect<A extends readonly string[]>(strings: string[], array: A): A[
 
 //
 
-function dunno<A extends readonly string[]>(
+function parseKoboMultiselect<A extends readonly string[]>(
   array: A,
   datum: Record<string, unknown>,
   field: string,
-) {
+): A[number][] {
   return array.filter((arrayItem) => {
     try {
       return parseString(datum, `${field}/${arrayItem}`) == '1'
