@@ -38,7 +38,7 @@ async function seed() {
   // Cleanup
 
   await pipe(
-    ['edifici', 'sottosistemi', 'localita', 'sezione_localita'] satisfies CollectionSlug[],
+    ['edifici', 'sottosistemi', 'localita', 'sezione_localita', 'media'] satisfies CollectionSlug[],
     A.map((slug) =>
       Effect.promise(() =>
         payload.delete({
@@ -87,6 +87,8 @@ async function seed() {
     (data) => Promise.all(data),
   )
 
+  /* */
+
   const edifici_data = await readCsv(filePath('edifici.csv'), csvOptions)
 
   const sezioni_localita_list = await pipe(
@@ -113,6 +115,8 @@ async function seed() {
     }),
     (data) => Promise.all(data),
   )
+
+  /* */
 
   const edifici = await pipe(
     edifici_data,
@@ -297,6 +301,204 @@ async function seed() {
     (data) => Promise.all(data),
   )
 
+  /* */
+
+  const edifici_kobo_breve_data = await readCsv(
+    filePath('censimento-versione-breve.csv'),
+    csvOptions,
+  )
+
+  const edifici_kobo_breve = await pipe(
+    edifici_kobo_breve_data,
+    A.filter((datum) => parseString(datum, 'NOTION') == 'NO'),
+    A.map((datum) => {
+      // TODO - Use
+      const sottosistema = pipe(parseString(datum, 'sottosistema'), (nome_sottosistema) =>
+        sottosistemi_list.find((sott) => sott.name == nome_sottosistema),
+      )
+
+      const particella = [
+        parseString(datum, 'foglio catastale'),
+        parseString(datum, 'particella catastale'),
+      ].join('_')
+
+      const destinazioni_uso = parseKoboMultiselect(
+        destinazioni_uso_moderno,
+        datum,
+        "destinazione d'uso",
+      )
+      const stato_conservazione = parseKoboMultiselect(
+        stati_conservazione,
+        datum,
+        'stato di conservazione generale',
+      )
+      const stato_utilizzo = parseKoboMultiselect(stati_utilizzo, datum, 'stato di utilizzo').at(0)
+
+      return payload.create({
+        collection: 'edifici',
+        data: {
+          anagrafica: [
+            {
+              anno: '2022',
+              particella,
+              destinazioni_uso: destinazioni_uso.map((tag_moderno) => ({ tag_moderno })),
+              stato_utilizzo,
+              stato_conservazione,
+            },
+          ],
+
+          immagini_url: [parseString(datum, 'generale_URL')].map((url) => ({ url })),
+
+          dati_lavoro: {
+            altre_note: parseString(datum, 'note'),
+          },
+        },
+      })
+    }),
+    (data) => Promise.all(data),
+  )
+
+  /* */
+
+  // const edifici_kobo_lungo_data = await readCsv(
+  //   filePath('censimento-versione-lunga.csv'),
+  //   csvOptions,
+  // )
+
+  // const edifici_kobo_lungo = await pipe(
+  //   edifici_kobo_lungo_data,
+  //   A.map((datum) => {
+  //     const particella = [
+  //       parseString(datum, 'foglio catastale'),
+  //       parseString(datum, 'particella catastale'),
+  //     ].join('_')
+
+  //     const [lat, lon, alt, gps] = parseString(datum, 'geolocalizzazione')
+  //       .split(' ')
+  //       .map(S.trim)
+  //       .map(Number)
+
+  //     const localita = pipe(parseString(datum, 'località'), (nome_localita) =>
+  //       localita_list.find((loc) => loc.name == nome_localita),
+  //     )
+
+  //     // TODO - Use
+  //     const sottosistema = pipe(parseString(datum, 'sottosistema'), (nome_sottosistema) =>
+  //       sottosistemi_list.find((sott) => sott.name == nome_sottosistema),
+  //     )
+
+  //     const stati_utilizzo_rilevati = parseKoboMultiselect(
+  //       stati_utilizzo,
+  //       datum,
+  //       'stato di utilizzo',
+  //     )
+
+  //     const destinazioni_uso = parseKoboMultiselect(
+  //       destinazioni_uso_moderno,
+  //       datum,
+  //       "destinazione d'uso",
+  //     )
+
+  //     return payload.create({
+  //       collection: 'edifici',
+  //       data: {
+  //         geolocalizzazione: {
+  //           coordinate: [lat, lon],
+  //           altitudine: alt,
+  //           precision: gps,
+  //         },
+
+  //         localita: localita?.id,
+
+  //         anagrafica: [
+  //           {
+  //             anno: '2022',
+  //             particella,
+  //             accessibilita: parseKoboMultiselect(accessibilita_edificio, datum, 'accessibilità'),
+  //             stato_utilizzo: stati_utilizzo_rilevati.at(0),
+  //             stato_utilizzo_secondario: stati_utilizzo_rilevati.at(1),
+  //             destinazioni_uso: destinazioni_uso.map((tag_moderno) => ({ tag_moderno })),
+  //           },
+  //         ],
+
+  //         // analisi_strutturale: [
+  //         //   {
+  //         //     componente: 'verticali',
+  //         //     materiali: parseKoboMultiselect(
+  //         //       componenti_strutturali.verticali.materiali,
+  //         //       datum,
+  //         //       'materiale - tipologia_strutture verticali',
+  //         //     ),
+  //         //     tecnica_costruttiva: parseKoboMultiselect(
+  //         //       componenti_strutturali.verticali.tecniche,
+  //         //       datum,
+  //         //       'tecnica costruttiva',
+  //         //     ).at(0), // TODO - Review
+  //         //     stato_conservazione: parseKoboMultiselect(
+  //         //       stati_conservazione,
+  //         //       datum,
+  //         //       'stato di conservazione',
+  //         //     ).at(0), // TODO - Review
+  //         //     fenomeni_degrado: parseKoboMultiselect(
+  //         //       fenomeni_degrado_strutturali,
+  //         //       datum,
+  //         //       'fenomeni di degrado',
+  //         //     ),
+  //         //   },
+
+  //         //   {
+  //         //     componente: 'orizzontali',
+  //         //     materiali: parseKoboMultiselect(
+  //         //       componenti_strutturali.orizzontali.materiali,
+  //         //       datum,
+  //         //       'materiale - tipologia_strutture orizzontali',
+  //         //     ),
+  //         //     tecnica_costruttiva: parseKoboMultiselect(
+  //         //       componenti_strutturali.orizzontali.tecniche,
+  //         //       datum,
+  //         //       'tecnica costruttiva',
+  //         //       '2',
+  //         //     ).at(0),
+  //         //     stato_conservazione: parseKoboMultiselect(
+  //         //       stati_conservazione,
+  //         //       datum,
+  //         //       'stato di conservazione',
+  //         //       '2',
+  //         //     ).at(0),
+  //         //   },
+  //         // ],
+
+  //         immagini_url: [
+  //           parseString(datum, 'generale_URL'),
+  //           parseString(datum, 'prospetto nord_URL'),
+  //           parseString(datum, 'prospetto sud_URL'),
+  //           parseString(datum, 'prospetto est_URL'),
+  //           parseString(datum, 'prospetto ovest_URL'),
+  //           parseString(datum, 'foto 1_URL'),
+  //           parseString(datum, 'foto 2_URL'),
+  //           parseString(datum, 'foto 3_URL'),
+  //         ].map((url) => ({ url })),
+
+  //         altro: {
+  //           impiantistica: parseKoboMultiselect(impiantistica, datum, 'impiantistica'),
+  //           opere_provvisionali: parseKoboMultiselect(
+  //             opere_provvisionali,
+  //             datum,
+  //             'presenza opere provvisionali',
+  //           ),
+  //         },
+
+  //         dati_lavoro: {
+  //           altre_note: parseString(datum, 'note'),
+  //         },
+  //       },
+  //     })
+  //   }),
+  //   (data) => Promise.all(data),
+  // )
+
+  /* */
+
   process.exit(0)
 }
 
@@ -324,7 +526,7 @@ function removeNotionUrl(string: string) {
 }
 
 function parseString(record: Record<string, unknown>, key: string) {
-  if (!(key in record)) throw new Error('No key in record')
+  if (!(key in record)) throw new Error(`No key in record: ${key}`)
   return String(record[key]).trim()
 }
 
@@ -338,4 +540,24 @@ function find<A extends readonly string[]>(string: string, array: A): A[number] 
 
 function intersect<A extends readonly string[]>(strings: string[], array: A): A[number][] {
   return A.intersection(strings, array)
+}
+
+//
+
+function parseKoboMultiselect<A extends readonly string[]>(
+  array: A,
+  datum: Record<string, unknown>,
+  field: string,
+  suffix: string | undefined = undefined,
+): A[number][] {
+  return array.filter((arrayItem) => {
+    try {
+      let path = `${field}/${arrayItem}`
+      if (suffix) path += ` ${suffix}`
+      return parseString(datum, path) == '1'
+    } catch (e) {
+      console.log((e as Error).message)
+      return false
+    }
+  })
 }

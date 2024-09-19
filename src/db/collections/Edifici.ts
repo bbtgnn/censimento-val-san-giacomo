@@ -41,9 +41,24 @@ export const Edifici: CollectionConfig = {
   fields: [
     F.relation('localita', 'localita'), // TODO - Filter options based on [sottosistema]
     F.relation('sezione_localita', 'sezione_localita'), // TODO - Filter options based on [localita]
+
     {
-      name: 'coordinate',
-      type: 'point',
+      name: 'geolocalizzazione',
+      type: 'group',
+      fields: [
+        {
+          name: 'coordinate',
+          type: 'point',
+        },
+        {
+          name: 'altitudine',
+          type: 'number',
+        },
+        {
+          name: 'precision',
+          type: 'number',
+        },
+      ],
     },
 
     //

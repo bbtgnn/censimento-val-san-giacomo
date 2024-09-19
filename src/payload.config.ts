@@ -12,6 +12,7 @@ import { Edifici } from './db/collections/Edifici'
 import { Sottosistemi } from './db/collections/Sottosistemi'
 import { Localita } from './db/collections/Localita'
 import { SezioneLocalita } from './db/collections/SezioniLocalita'
+import { s3Storage } from '@payloadcms/storage-s3'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -34,6 +35,24 @@ export default buildConfig({
   }),
   sharp,
   plugins: [
-    // storage-adapter-placeholder
+    s3Storage({
+      collections: {
+        [Media.slug]: {
+          disableLocalStorage: true,
+          prefix: 'media',
+        },
+      },
+      disableLocalStorage: true,
+      bucket: process.env.S3_BUCKET || '',
+      config: {
+        forcePathStyle: true,
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY || '',
+          secretAccessKey: process.env.S3_SECRET_KEY || '',
+        },
+        endpoint: process.env.S3_ENDPOINT || '',
+        region: process.env.S3_REGION || '',
+      },
+    }),
   ],
 })

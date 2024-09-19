@@ -70,6 +70,7 @@ export interface User {
  */
 export interface Media {
   id: string;
+  prefix?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -90,11 +91,15 @@ export interface Edifici {
   id: string;
   localita?: (string | null) | Localita;
   sezione_localita?: (string | null) | SezioneLocalita;
-  /**
-   * @minItems 2
-   * @maxItems 2
-   */
-  coordinate?: [number, number] | null;
+  geolocalizzazione?: {
+    /**
+     * @minItems 2
+     * @maxItems 2
+     */
+    coordinate?: [number, number] | null;
+    altitudine?: number | null;
+    precision?: number | null;
+  };
   anagrafica?:
     | {
         anno?: string | null;
@@ -198,6 +203,7 @@ export interface Edifici {
                     | 'produttivo rurale'
                     | 'residenziale'
                     | 'servizio'
+                    | 'servizio accessorio'
                   )
                 | null;
               id?: string | null;
