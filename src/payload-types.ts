@@ -91,11 +91,15 @@ export interface Edifici {
   id: string;
   localita?: (string | null) | Localita;
   sezione_localita?: (string | null) | SezioneLocalita;
-  /**
-   * @minItems 2
-   * @maxItems 2
-   */
-  coordinate?: [number, number] | null;
+  geolocalizzazione?: {
+    /**
+     * @minItems 2
+     * @maxItems 2
+     */
+    coordinate?: [number, number] | null;
+    altitudine?: number | null;
+    precision?: number | null;
+  };
   anagrafica?:
     | {
         anno?: string | null;
