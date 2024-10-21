@@ -14,5 +14,9 @@ export const Sottosistemi: CollectionConfig = {
   access: {
     read: () => true,
   },
-  fields: [F.name],
+  fields: [
+    { ...F.name, required: true },
+    { ...F.relation('comuni', 'comune'), required: true },
+    F.relation('sottosistemi', 'sottosistema_storico'),
+  ],
 }

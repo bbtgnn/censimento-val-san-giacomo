@@ -1,10 +1,10 @@
-import { CollectionSlug, getPayload } from 'payload'
+import { BasePayload, CollectionSlug, getPayload } from 'payload'
 import config from '@payload-config'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import * as csv from '@fast-csv/parse'
-import { Array as A, Effect, Option, pipe, String as S } from 'effect'
+import { Array as A, Effect, pipe, String as S } from 'effect'
 import {
   accessibilita_edificio,
   stati_censimento_1807,
@@ -22,23 +22,27 @@ import {
   fenomeni_degrado_strutturali,
   vincoli_tutele,
 } from '@/db/collections/Edifici.utils'
+import {
+  accessibilita_principale,
+  reti_servizi,
+  viabilita_interna,
+} from '@/db/collections/Localita.utils'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 //
 
-await seed()
+const payload = await getPayload({ config })
+await clearDb(payload)
+await seed(payload)
+process.exit(0)
 
 /* Process */
 
-async function seed() {
-  const payload = await getPayload({ config })
-
-  // Cleanup
-
+async function clearDb(payload: BasePayload) {
   await pipe(
-    ['edifici', 'sottosistemi', 'localita', 'sezione_localita', 'media'] satisfies CollectionSlug[],
+    ['edifici', 'sottosistemi', 'localita', 'comuni', 'media'] satisfies CollectionSlug[],
     A.map((slug) =>
       Effect.promise(() =>
         payload.delete({
@@ -50,313 +54,390 @@ async function seed() {
     Effect.all,
     Effect.runPromise,
   )
+}
 
-  //
-
+async function seed(payload: BasePayload) {
   const csvOptions: csv.ParserOptionsArgs = {
-    delimiter: ';',
+    delimiter: ',',
     headers: true,
   }
 
-  const sottosistemi_data = await readCsv(filePath('sottosistemi.csv'), csvOptions)
-  const sottosistemi_list = await pipe(
-    sottosistemi_data,
+  /* Comuni */
+
+  const comuni_csv = await readCsv(filePath('Comuni.csv'), csvOptions)
+  const comuni = await pipe(
+    comuni_csv,
     A.map((datum) => {
       const name = parseString(datum, 'Denominazione')
       return payload.create({
-        collection: 'sottosistemi',
+        collection: 'comuni',
         data: { name },
       })
     }),
     (data) => Promise.all(data),
   )
 
-  const localita_data = await readCsv(filePath('localita.csv'), csvOptions)
-  const localita_list = await pipe(
-    localita_data,
+  /* Sottosistemi */
+
+  const sottosistemi_csv = await readCsv(filePath('Sottosistemi territoriali.csv'), csvOptions)
+  const sottosistemi = await pipe(
+    sottosistemi_csv,
     A.map((datum) => {
-      const name = parseString(datum, 'Denominazione').trim()
-      const nome_sottosistema = removeNotionUrl(parseString(datum, 'Sottosistema'))
-      const sottosistema = sottosistemi_list.find((sott) => sott.name?.trim() === nome_sottosistema)
+      const name = parseString(datum, 'Denominazione')
+      const comune_nome = removeNotionUrl(parseString(datum, 'Comune'))
+      const comune = comuni.find((c) => c.name == comune_nome)
+      if (!comune) throw new Error('comune not found')
+      return payload.create({
+        collection: 'sottosistemi',
+        data: { name, comune: comune.id },
+      })
+    }),
+    (data) => Promise.all(data),
+  )
+
+  const conversioni = {
+    Andossi: 'Pianazzo',
+    Teggiate: 'Pianazzo',
+    Rasdeglia: 'Pianazzo',
+    Montespluga: 'Madesimo',
+  }
+
+  for (const [src_name, dest_name] of Object.entries(conversioni)) {
+    const src = sottosistemi.find((s) => s.name == src_name)
+    const dest = sottosistemi.find((s) => s.name == dest_name)
+    if (src && dest) {
+      await payload.update({
+        collection: 'sottosistemi',
+        id: src.id,
+        data: {
+          sottosistema_storico: dest.id,
+        },
+      })
+    }
+  }
+
+  /* Localita */
+
+  const localita_csv = await readCsv(filePath('Località.csv'), {
+    ...csvOptions,
+    delimiter: ';',
+  })
+  const localita_1988_csv = await readCsv(filePath('1988-NAF.csv'), {
+    ...csvOptions,
+    delimiter: ',',
+  })
+
+  const localita_list = await pipe(
+    localita_csv,
+    A.map((datum) => {
+      const name = parseString(datum, 'Denominazione')
+
+      const sottosistemi_nomi = parseStringArray(datum, 'Sottosistema').map(removeNotionUrl)
+      const sottosistemi_collegati = sottosistemi
+        .filter((s) => sottosistemi_nomi.includes(s.name))
+        .map((s) => s.id)
+
+      const slm = Number(parseString(datum, 'slm'))
+      const codice_localita = Number(parseString(datum, 'Codice localita'))
+
+      const abitanti_residenti_2022 = Number(parseString(datum, 'res 2022 - da verificare'))
+
+      const viabilita = intersect(parseStringArray(datum, 'Viabilità interna'), viabilita_interna)
+      const accessibilita = intersect(
+        parseStringArray(datum, 'Accessibilità principale'),
+        accessibilita_principale,
+      )
+      const reti_e_servizi = parseStringArray(datum, 'Reti servizi presenti')
+        .map((key) => reti_servizi[key as keyof typeof reti_servizi])
+        .filter(Boolean)
 
       return payload.create({
         collection: 'localita',
-        data: { name, sottosistema: sottosistema?.id },
-      })
-    }),
-    (data) => Promise.all(data),
-  )
-
-  /* */
-
-  const edifici_data = await readCsv(filePath('edifici.csv'), csvOptions)
-
-  const sezioni_localita_list = await pipe(
-    edifici_data,
-    A.map((datum) => {
-      const localita = parseString(datum, 'Località')
-      const sezione_localita = parseString(datum, 'sezione località')
-      return { localita, sezione_localita }
-    }),
-    A.dedupeWith((a, b) => a.sezione_localita == b.sezione_localita),
-    A.filter((datum) => S.isNonEmpty(datum.sezione_localita)),
-    A.map((datum) => {
-      const nome = datum.sezione_localita
-      const nome_localita = removeNotionUrl(datum.localita)
-      const localita = localita_list.find((l) => l.name == nome_localita)
-
-      return payload.create({
-        collection: 'sezione_localita',
         data: {
-          name: nome,
-          localita: localita?.id,
+          name,
+          sottosistemi: sottosistemi_collegati,
+          slm,
+          codice_localita,
+          abitanti_residenti_2022,
+          viabilita_interna: viabilita,
+          accessibilita_principale: accessibilita,
+          reti_e_servizi,
         },
       })
     }),
     (data) => Promise.all(data),
   )
 
-  /* */
+  // /* */
 
-  const edifici = await pipe(
-    edifici_data,
-    A.map((datum) => {
-      const localita_nome = removeNotionUrl(parseString(datum, 'Località'))
-      const localita = localita_list.find((loc) => loc.name === localita_nome)
-      const sezione_localita_nome = parseString(datum, 'sezione località')
-      const sezione_localita = sezioni_localita_list.find(
-        (sez) => sez.name === sezione_localita_nome,
-      )
+  // const edifici_data = await readCsv(filePath('edifici.csv'), csvOptions)
 
-      return payload.create({
-        collection: 'edifici',
-        data: {
-          localita: localita?.id,
-          sezione_localita: sezione_localita?.id,
+  // const sezioni_localita_list = await pipe(
+  //   edifici_data,
+  //   A.map((datum) => {
+  //     const localita = parseString(datum, 'Località')
+  //     const sezione_localita = parseString(datum, 'sezione località')
+  //     return { localita, sezione_localita }
+  //   }),
+  //   A.dedupeWith((a, b) => a.sezione_localita == b.sezione_localita),
+  //   A.filter((datum) => S.isNonEmpty(datum.sezione_localita)),
+  //   A.map((datum) => {
+  //     const nome = datum.sezione_localita
+  //     const nome_localita = removeNotionUrl(datum.localita)
+  //     const localita = localita_list.find((l) => l.name == nome_localita)
 
-          anagrafica: [
-            {
-              anno: '2022',
-              particella: parseString(datum, 'cat 2022'),
-              stato_utilizzo: find(parseString(datum, 'stato_utilizzo_attuale'), stati_utilizzo),
+  //     return payload.create({
+  //       collection: 'sezione_localita',
+  //       data: {
+  //         name: nome,
+  //         localita: localita?.id,
+  //       },
+  //     })
+  //   }),
+  //   (data) => Promise.all(data),
+  // )
 
-              destinazioni_uso: intersect(
-                parseStringArray(datum, 'destinazione_uso_attuale'),
-                destinazioni_uso_moderno,
-              ).map((tag_moderno) => ({ tag_moderno })),
+  // /* */
 
-              stato_conservazione: intersect(
-                parseStringArray(datum, 'stato_conservazione_globale'),
-                stati_conservazione,
-              ),
+  // const edifici = await pipe(
+  //   edifici_data,
+  //   A.map((datum) => {
+  //     const localita_nome = removeNotionUrl(parseString(datum, 'Località'))
+  //     const localita = localita_list.find((loc) => loc.name === localita_nome)
+  //     const sezione_localita_nome = parseString(datum, 'sezione località')
+  //     const sezione_localita = sezioni_localita_list.find(
+  //       (sez) => sez.name === sezione_localita_nome,
+  //     )
 
-              accessibilita: intersect(
-                parseStringArray(datum, 'accessibilità'),
-                accessibilita_edificio,
-              ),
-            },
-            {
-              anno: '1951',
-              particella: parseString(datum, 'cat 1951'),
-              stato: 'presente',
-              destinazioni_uso: intersect(
-                parseStringArray(datum, 'dest uso 1950'),
-                destinazioni_uso_1951,
-              ).map((tag_storico) => ({ tag_storico })),
-            },
-            {
-              anno: '1853',
-              particella: parseString(datum, 'cat 1853'),
-              stato: 'presente',
-              destinazioni_uso: intersect(
-                parseStringArray(datum, 'dest uso 1853'),
-                destinazioni_uso_1853,
-              ).map((tag_storico) => ({ tag_storico })),
-            },
-            {
-              anno: '1807',
-              stato: find(parseString(datum, 'cat 1807'), stati_censimento_1807),
-            },
-          ],
+  //     return payload.create({
+  //       collection: 'edifici',
+  //       data: {
+  //         localita: localita?.id,
+  //         sezione_localita: sezione_localita?.id,
 
-          analisi_strutturale: [
-            {
-              componente: 'verticali',
-              materiali: intersect(
-                parseStringArray(datum, 'componenti strutturali verticali - materiale'),
-                componenti_strutturali.verticali.materiali,
-              ),
-              tecnica_costruttiva: find(
-                parseString(datum, 'componenti verticali - tecnica costruttiva'),
-                componenti_strutturali.verticali.tecniche,
-              ),
-              stato_conservazione: find(
-                parseString(datum, 'componenti verticali - conservazione'),
-                stati_conservazione,
-              ),
-              fenomeni_degrado: intersect(
-                parseStringArray(datum, 'fenomeni_degrado_strutturali_verticali'),
-                fenomeni_degrado_strutturali,
-              ),
-            },
-            {
-              componente: 'coperture',
-              materiali: intersect(
-                parseStringArray(datum, 'componenti - coperture - materiale'),
-                componenti_strutturali.coperture.materiali,
-              ),
-              tecnica_costruttiva: find(
-                parseString(datum, 'componenti - coperture - tecnica costruttiva'),
-                componenti_strutturali.coperture.tecniche,
-              ),
-              stato_conservazione: find(
-                parseString(datum, 'componenti - coperture - conservazione'),
-                stati_conservazione,
-              ),
-              fenomeni_degrado: intersect(
-                parseStringArray(datum, 'fenomeni_degrado_strutturali_coperture'),
-                fenomeni_degrado_strutturali,
-              ),
-            },
-            {
-              componente: 'orizzontali',
-              materiali: intersect(
-                parseStringArray(datum, 'componenti strutturali orizzontali - materiale'),
-                componenti_strutturali.orizzontali.materiali,
-              ),
-              tecnica_costruttiva: find(
-                parseString(datum, 'componenti strutturali orizzontali - tecnica costruttiva'),
-                componenti_strutturali.orizzontali.tecniche,
-              ),
-              stato_conservazione: find(
-                parseString(datum, 'componenti strutturali orizzontali - conservazione'),
-                stati_conservazione,
-              ),
-            },
-            {
-              componente: 'fondazioni',
-              materiali: intersect(
-                parseStringArray(datum, 'componenti - fondazioni'),
-                componenti_strutturali.fondazioni.materiali,
-              ),
-            },
-          ],
+  //         anagrafica: [
+  //           {
+  //             anno: '2022',
+  //             particella: parseString(datum, 'cat 2022'),
+  //             stato_utilizzo: find(parseString(datum, 'stato_utilizzo_attuale'), stati_utilizzo),
 
-          analisi_componenti_architettoniche: [
-            {
-              componente: 'finiture esterne',
-              fronte: 'generale',
-              tipologia: intersect(
-                parseStringArray(datum, 'finiture esterne - tipologia'),
-                componenti_architettoniche['finiture esterne'].tipologia,
-              ),
-              materiali: intersect(
-                parseStringArray(datum, 'finiture esterne - dettaglio materiale intonaco'),
-                componenti_architettoniche['finiture esterne'].materiali,
-              ),
-              stato_conservazione: find(
-                parseString(datum, 'finiture esterne - conservazione'),
-                stati_conservazione,
-              ),
-              fenomeni_degrado: intersect(
-                parseStringArray(datum, 'fenomeni_degrado_finiture esterne'),
-                componenti_architettoniche['finiture esterne'].fenomeni_degrado,
-              ),
-            },
-          ],
+  //             destinazioni_uso: intersect(
+  //               parseStringArray(datum, 'destinazione_uso_attuale'),
+  //               destinazioni_uso_moderno,
+  //             ).map((tag_moderno) => ({ tag_moderno })),
 
-          altro: {
-            caratteri_storico_culturali: intersect(
-              parseStringArray(datum, 'caratteri_storico_culturali'),
-              caratteri_storico_culturali,
-            ),
+  //             stato_conservazione: intersect(
+  //               parseStringArray(datum, 'stato_conservazione_globale'),
+  //               stati_conservazione,
+  //             ),
 
-            pavimentazioni_esterne: intersect(
-              parseStringArray(datum, 'pavimentazioni_esterne'),
-              pavimentazioni_esterne,
-            ),
+  //             accessibilita: intersect(
+  //               parseStringArray(datum, 'accessibilità'),
+  //               accessibilita_edificio,
+  //             ),
+  //           },
+  //           {
+  //             anno: '1951',
+  //             particella: parseString(datum, 'cat 1951'),
+  //             stato: 'presente',
+  //             destinazioni_uso: intersect(
+  //               parseStringArray(datum, 'dest uso 1950'),
+  //               destinazioni_uso_1951,
+  //             ).map((tag_storico) => ({ tag_storico })),
+  //           },
+  //           {
+  //             anno: '1853',
+  //             particella: parseString(datum, 'cat 1853'),
+  //             stato: 'presente',
+  //             destinazioni_uso: intersect(
+  //               parseStringArray(datum, 'dest uso 1853'),
+  //               destinazioni_uso_1853,
+  //             ).map((tag_storico) => ({ tag_storico })),
+  //           },
+  //           {
+  //             anno: '1807',
+  //             stato: find(parseString(datum, 'cat 1807'), stati_censimento_1807),
+  //           },
+  //         ],
 
-            impiantistica: intersect(parseStringArray(datum, 'impiantistica'), impiantistica),
+  //         analisi_strutturale: [
+  //           {
+  //             componente: 'verticali',
+  //             materiali: intersect(
+  //               parseStringArray(datum, 'componenti strutturali verticali - materiale'),
+  //               componenti_strutturali.verticali.materiali,
+  //             ),
+  //             tecnica_costruttiva: find(
+  //               parseString(datum, 'componenti verticali - tecnica costruttiva'),
+  //               componenti_strutturali.verticali.tecniche,
+  //             ),
+  //             stato_conservazione: find(
+  //               parseString(datum, 'componenti verticali - conservazione'),
+  //               stati_conservazione,
+  //             ),
+  //             fenomeni_degrado: intersect(
+  //               parseStringArray(datum, 'fenomeni_degrado_strutturali_verticali'),
+  //               fenomeni_degrado_strutturali,
+  //             ),
+  //           },
+  //           {
+  //             componente: 'coperture',
+  //             materiali: intersect(
+  //               parseStringArray(datum, 'componenti - coperture - materiale'),
+  //               componenti_strutturali.coperture.materiali,
+  //             ),
+  //             tecnica_costruttiva: find(
+  //               parseString(datum, 'componenti - coperture - tecnica costruttiva'),
+  //               componenti_strutturali.coperture.tecniche,
+  //             ),
+  //             stato_conservazione: find(
+  //               parseString(datum, 'componenti - coperture - conservazione'),
+  //               stati_conservazione,
+  //             ),
+  //             fenomeni_degrado: intersect(
+  //               parseStringArray(datum, 'fenomeni_degrado_strutturali_coperture'),
+  //               fenomeni_degrado_strutturali,
+  //             ),
+  //           },
+  //           {
+  //             componente: 'orizzontali',
+  //             materiali: intersect(
+  //               parseStringArray(datum, 'componenti strutturali orizzontali - materiale'),
+  //               componenti_strutturali.orizzontali.materiali,
+  //             ),
+  //             tecnica_costruttiva: find(
+  //               parseString(datum, 'componenti strutturali orizzontali - tecnica costruttiva'),
+  //               componenti_strutturali.orizzontali.tecniche,
+  //             ),
+  //             stato_conservazione: find(
+  //               parseString(datum, 'componenti strutturali orizzontali - conservazione'),
+  //               stati_conservazione,
+  //             ),
+  //           },
+  //           {
+  //             componente: 'fondazioni',
+  //             materiali: intersect(
+  //               parseStringArray(datum, 'componenti - fondazioni'),
+  //               componenti_strutturali.fondazioni.materiali,
+  //             ),
+  //           },
+  //         ],
 
-            opere_provvisionali: intersect(
-              parseStringArray(datum, 'presenza_opere_provvisionali'),
-              opere_provvisionali,
-            ),
+  //         analisi_componenti_architettoniche: [
+  //           {
+  //             componente: 'finiture esterne',
+  //             fronte: 'generale',
+  //             tipologia: intersect(
+  //               parseStringArray(datum, 'finiture esterne - tipologia'),
+  //               componenti_architettoniche['finiture esterne'].tipologia,
+  //             ),
+  //             materiali: intersect(
+  //               parseStringArray(datum, 'finiture esterne - dettaglio materiale intonaco'),
+  //               componenti_architettoniche['finiture esterne'].materiali,
+  //             ),
+  //             stato_conservazione: find(
+  //               parseString(datum, 'finiture esterne - conservazione'),
+  //               stati_conservazione,
+  //             ),
+  //             fenomeni_degrado: intersect(
+  //               parseStringArray(datum, 'fenomeni_degrado_finiture esterne'),
+  //               componenti_architettoniche['finiture esterne'].fenomeni_degrado,
+  //             ),
+  //           },
+  //         ],
 
-            vincoli_tutele: intersect(parseStringArray(datum, 'vincoli e tutele'), vincoli_tutele),
-          },
+  //         altro: {
+  //           caratteri_storico_culturali: intersect(
+  //             parseStringArray(datum, 'caratteri_storico_culturali'),
+  //             caratteri_storico_culturali,
+  //           ),
 
-          dati_lavoro: {
-            altre_note: parseString(datum, 'note - da tenere'),
-            imu_2021: parseStringArray(datum, 'IMU 2021 - da tenere').map((code) => ({ code })),
-            tari_2021: parseString(datum, 'TARI 2021 - da tenere'),
-          },
+  //           pavimentazioni_esterne: intersect(
+  //             parseStringArray(datum, 'pavimentazioni_esterne'),
+  //             pavimentazioni_esterne,
+  //           ),
 
-          immagini_url: parseStringArray(datum, 'Immagini_fotografie sopralluogo').map((url) => ({
-            url,
-          })),
-        },
-      })
-    }),
-    (data) => Promise.all(data),
-  )
+  //           impiantistica: intersect(parseStringArray(datum, 'impiantistica'), impiantistica),
 
-  /* */
+  //           opere_provvisionali: intersect(
+  //             parseStringArray(datum, 'presenza_opere_provvisionali'),
+  //             opere_provvisionali,
+  //           ),
 
-  const edifici_kobo_breve_data = await readCsv(
-    filePath('censimento-versione-breve.csv'),
-    csvOptions,
-  )
+  //           vincoli_tutele: intersect(parseStringArray(datum, 'vincoli e tutele'), vincoli_tutele),
+  //         },
 
-  const edifici_kobo_breve = await pipe(
-    edifici_kobo_breve_data,
-    A.filter((datum) => parseString(datum, 'NOTION') == 'NO'),
-    A.map((datum) => {
-      // TODO - Use
-      const sottosistema = pipe(parseString(datum, 'sottosistema'), (nome_sottosistema) =>
-        sottosistemi_list.find((sott) => sott.name == nome_sottosistema),
-      )
+  //         dati_lavoro: {
+  //           altre_note: parseString(datum, 'note - da tenere'),
+  //           imu_2021: parseStringArray(datum, 'IMU 2021 - da tenere').map((code) => ({ code })),
+  //           tari_2021: parseString(datum, 'TARI 2021 - da tenere'),
+  //         },
 
-      const particella = [
-        parseString(datum, 'foglio catastale'),
-        parseString(datum, 'particella catastale'),
-      ].join('_')
+  //         immagini_url: parseStringArray(datum, 'Immagini_fotografie sopralluogo').map((url) => ({
+  //           url,
+  //         })),
+  //       },
+  //     })
+  //   }),
+  //   (data) => Promise.all(data),
+  // )
 
-      const destinazioni_uso = parseKoboMultiselect(
-        destinazioni_uso_moderno,
-        datum,
-        "destinazione d'uso",
-      )
-      const stato_conservazione = parseKoboMultiselect(
-        stati_conservazione,
-        datum,
-        'stato di conservazione generale',
-      )
-      const stato_utilizzo = parseKoboMultiselect(stati_utilizzo, datum, 'stato di utilizzo').at(0)
+  // /* */
 
-      return payload.create({
-        collection: 'edifici',
-        data: {
-          anagrafica: [
-            {
-              anno: '2022',
-              particella,
-              destinazioni_uso: destinazioni_uso.map((tag_moderno) => ({ tag_moderno })),
-              stato_utilizzo,
-              stato_conservazione,
-            },
-          ],
+  // const edifici_kobo_breve_data = await readCsv(
+  //   filePath('censimento-versione-breve.csv'),
+  //   csvOptions,
+  // )
 
-          immagini_url: [parseString(datum, 'generale_URL')].map((url) => ({ url })),
+  // const edifici_kobo_breve = await pipe(
+  //   edifici_kobo_breve_data,
+  //   A.filter((datum) => parseString(datum, 'NOTION') == 'NO'),
+  //   A.map((datum) => {
+  //     // TODO - Use
+  //     const sottosistema = pipe(parseString(datum, 'sottosistema'), (nome_sottosistema) =>
+  //       sottosistemi_list.find((sott) => sott.name == nome_sottosistema),
+  //     )
 
-          dati_lavoro: {
-            altre_note: parseString(datum, 'note'),
-          },
-        },
-      })
-    }),
-    (data) => Promise.all(data),
-  )
+  //     const particella = [
+  //       parseString(datum, 'foglio catastale'),
+  //       parseString(datum, 'particella catastale'),
+  //     ].join('_')
+
+  //     const destinazioni_uso = parseKoboMultiselect(
+  //       destinazioni_uso_moderno,
+  //       datum,
+  //       "destinazione d'uso",
+  //     )
+  //     const stato_conservazione = parseKoboMultiselect(
+  //       stati_conservazione,
+  //       datum,
+  //       'stato di conservazione generale',
+  //     )
+  //     const stato_utilizzo = parseKoboMultiselect(stati_utilizzo, datum, 'stato di utilizzo').at(0)
+
+  //     return payload.create({
+  //       collection: 'edifici',
+  //       data: {
+  //         anagrafica: [
+  //           {
+  //             anno: '2022',
+  //             particella,
+  //             destinazioni_uso: destinazioni_uso.map((tag_moderno) => ({ tag_moderno })),
+  //             stato_utilizzo,
+  //             stato_conservazione,
+  //           },
+  //         ],
+
+  //         immagini_url: [parseString(datum, 'generale_URL')].map((url) => ({ url })),
+
+  //         dati_lavoro: {
+  //           altre_note: parseString(datum, 'note'),
+  //         },
+  //       },
+  //     })
+  //   }),
+  //   (data) => Promise.all(data),
+  // )
 
   /* */
 
@@ -498,8 +579,6 @@ async function seed() {
   // )
 
   /* */
-
-  process.exit(0)
 }
 
 /* -- Utils -- */

@@ -16,7 +16,7 @@ export interface Config {
     edifici: Edifici;
     sottosistemi: Sottosistemi;
     localita: Localita;
-    sezione_localita: SezioneLocalita;
+    comuni: Comuni;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
@@ -90,7 +90,6 @@ export interface Media {
 export interface Edifici {
   id: string;
   localita?: (string | null) | Localita;
-  sezione_localita?: (string | null) | SezioneLocalita;
   geolocalizzazione?: {
     /**
      * @minItems 2
@@ -414,8 +413,72 @@ export interface Edifici {
  */
 export interface Localita {
   id: string;
-  name?: string | null;
-  sottosistema?: (string | null) | Sottosistemi;
+  name: string;
+  sottosistemi: (string | Sottosistemi)[];
+  slm: number;
+  codice_localita: number;
+  abitanti_residenti_2022?: number | null;
+  accessibilita_principale?: ('sentiero' | 'mulattiera' | 'strada asfaltata' | 'strada sterrata')[] | null;
+  viabilita_interna_tipi?: ('pedonale' | 'veicolare')[] | null;
+  viabilita_interna_materiali?:
+    | (
+        | 'acciottolato'
+        | 'acciottolato a coltello con traversine trasversali'
+        | 'pavimentata'
+        | 'piode'
+        | 'terra battuta'
+      )[]
+    | null;
+  reti_e_servizi?:
+    | (
+        | 'rete idrica'
+        | 'rete elettrica'
+        | 'illuminazione pubblica'
+        | 'rete telefonica'
+        | 'telefono pubblico'
+        | 'cimitero'
+        | 'bar trattoria'
+        | 'pensione'
+      )[]
+    | null;
+  elementi_urbanistici?:
+    | ('fontana' | 'lavatoio' | 'panche' | 'passaggi coperti' | 'soste' | 'vasca in pietra monolitica')
+    | null;
+  dati_1988?: {
+    accessibilita_principale?: ('sentiero' | 'mulattiera' | 'strada asfaltata' | 'strada sterrata')[] | null;
+    viabilita_interna_tipi?: ('pedonale' | 'veicolare')[] | null;
+    viabilita_interna_materiali?:
+      | (
+          | 'acciottolato'
+          | 'acciottolato a coltello con traversine trasversali'
+          | 'pavimentata'
+          | 'piode'
+          | 'terra battuta'
+        )[]
+      | null;
+    reti_e_servizi?:
+      | (
+          | 'rete idrica'
+          | 'rete elettrica'
+          | 'illuminazione pubblica'
+          | 'rete telefonica'
+          | 'telefono pubblico'
+          | 'cimitero'
+          | 'bar trattoria'
+          | 'pensione'
+        )[]
+      | null;
+    uso_pre?: ('abbandono' | 'discontinuo' | 'permanente' | 'stagionale') | null;
+    uso?: ('abbandono' | 'discontinuo' | 'permanente' | 'stagionale') | null;
+    stato_conservazione?:
+      | (
+          | 'complesso in discrete condizioni con interventi di recupero non corretti'
+          | 'complesso in discrete condizioni di conservazione'
+          | 'complesso in pessime condizioni di conservazione'
+          | 'senza gravi alterazioni ma in stato di abbandono e carente di manutenzione'
+        )
+      | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -425,18 +488,19 @@ export interface Localita {
  */
 export interface Sottosistemi {
   id: string;
-  name?: string | null;
+  name: string;
+  comune: string | Comuni;
+  sottosistema_storico?: (string | null) | Sottosistemi;
   updatedAt: string;
   createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "sezione_localita".
+ * via the `definition` "comuni".
  */
-export interface SezioneLocalita {
+export interface Comuni {
   id: string;
-  name?: string | null;
-  localita?: (string | null) | Localita;
+  name: string;
   updatedAt: string;
   createdAt: string;
 }
