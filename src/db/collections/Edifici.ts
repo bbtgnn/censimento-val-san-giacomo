@@ -76,10 +76,6 @@ export const Edifici: CollectionConfig = {
           type: 'text',
         },
         {
-          name: 'subalterno',
-          type: 'text',
-        },
-        {
           name: 'accessibilita',
           type: 'select',
           options: Object.values(accessibilita_edificio),
@@ -97,11 +93,6 @@ export const Edifici: CollectionConfig = {
         },
         {
           name: 'stato_utilizzo',
-          type: 'select',
-          options: Object.values(STATI_UTILIZZO),
-        },
-        {
-          name: 'stato_utilizzo_secondario',
           type: 'select',
           options: Object.values(STATI_UTILIZZO),
         },

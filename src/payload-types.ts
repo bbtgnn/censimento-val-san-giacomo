@@ -104,7 +104,6 @@ export interface Edifici {
     | {
         anno?: string | null;
         particella?: string | null;
-        subalterno?: string | null;
         accessibilita?: ('sentiero' | 'vicolo pedonale' | 'strada carrabile' | 'strada in terra battuta')[] | null;
         unita?:
           | {
@@ -116,9 +115,6 @@ export interface Edifici {
             }[]
           | null;
         stato_utilizzo?:
-          | ('uso permanente' | 'uso temporaneo' | 'disuso' | 'disuso - rudere' | 'non rilevabile' | 'non presente')
-          | null;
-        stato_utilizzo_secondario?:
           | ('uso permanente' | 'uso temporaneo' | 'disuso' | 'disuso - rudere' | 'non rilevabile' | 'non presente')
           | null;
         stato_conservazione?:
