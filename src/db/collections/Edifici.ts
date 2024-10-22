@@ -40,7 +40,7 @@ export const Edifici: CollectionConfig = {
   },
   fields: [
     F.relation('localita', 'localita'), // TODO - Filter options based on [sottosistema]
-
+    { name: 'sezione_localita', type: 'text' },
     {
       name: 'geolocalizzazione',
       type: 'group',
@@ -122,7 +122,7 @@ export const Edifici: CollectionConfig = {
               name: 'tag_storico',
               type: 'select',
               options: [
-                ...Object.values(destinazioni_uso_1853),
+                ...Object.keys(destinazioni_uso_1853),
                 ...Object.values(destinazioni_uso_1951),
               ],
             },

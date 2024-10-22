@@ -90,6 +90,7 @@ export interface Media {
 export interface Edifici {
   id: string;
   localita?: (string | null) | Localita;
+  sezione_localita?: string | null;
   geolocalizzazione?: {
     /**
      * @minItems 2
@@ -129,6 +130,7 @@ export interface Edifici {
               | 'non rilevabile'
               | 'perdita funzionalità'
               | 'senza fenomeni di degrado'
+              | 'nd'
             )[]
           | null;
         destinazioni_uso?:
@@ -136,55 +138,50 @@ export interface Edifici {
               nome?: string | null;
               tag_storico?:
                 | (
-                    | 'A CASA DIR'
-                    | 'BOSCO CEDU'
-                    | 'CANTINA D'
                     | 'CANTINA'
-                    | 'CASA ABB'
-                    | 'CASA COAD'
-                    | 'CASA DIR'
-                    | 'CASA IR'
-                    | 'CASA PARRO'
+                    | 'CANTINA D'
                     | 'CASA'
+                    | 'CASA ABB'
+                    | 'casa cantoniera'
+                    | 'CASA COADIUTORALE'
+                    | 'CASA DIR'
+                    | 'casa guardiano'
+                    | 'CASA PARRO'
+                    | 'casa uffici postali'
                     | 'CASELLO'
-                    | 'CASERMA'
+                    | 'caserma'
+                    | 'CASOLARE'
                     | 'CASOLARE A'
                     | 'CASOLARE D'
-                    | 'CASOLARE'
                     | 'CASTAGNETO'
                     | 'CC'
                     | 'CEPPO NUDO'
-                    | 'CHECK - ND'
                     | 'COLTIVO'
-                    | 'DOGANA'
+                    | 'dogana'
                     | 'ED RELIGIOSO'
-                    | 'F'
+                    | 'fabbrica'
                     | 'FIENILE'
-                    | 'LT ABB'
+                    | 'LS'
                     | 'LT'
-                    | 'luogo superiore'
+                    | 'LT ABB'
                     | 'MULINO'
                     | 'nd'
-                    | 'NP'
-                    | 'P CANTINA'
-                    | 'P CASA ABB'
+                    | 'p cantina'
                     | 'P CASA'
-                    | 'P CASELLO'
                     | 'P CC'
-                    | 'P F'
                     | 'P FIENILE'
                     | 'P LT'
                     | 'P SF'
                     | 'P STALLA'
+                    | 'PASC ALPE'
                     | 'PASCOLO'
-                    | 'PCC'
                     | 'PRATO'
-                    | 'S'
                     | 'SASSO N'
                     | 'SF'
                     | 'STALLA'
                     | 'ZAPPATIVO'
                     | 'ZERBO'
+                    | 'NP'
                     | 'URBANO'
                     | 'FA URBANO'
                     | 'PFA RURALE'
@@ -198,11 +195,12 @@ export interface Edifici {
                     | 'multifunzione'
                     | 'non rilevabile'
                     | 'produttivo'
-                    | 'produttivo industriale'
                     | 'produttivo rurale'
                     | 'residenziale'
                     | 'servizio'
+                    | 'verde'
                     | 'servizio accessorio'
+                    | 'nd'
                   )
                 | null;
               id?: string | null;
@@ -254,6 +252,7 @@ export interface Edifici {
               | 'non rilevabile'
               | 'perdita funzionalità'
               | 'senza fenomeni di degrado'
+              | 'nd'
             )
           | null;
         fenomeni_degrado?:
@@ -337,6 +336,7 @@ export interface Edifici {
               | 'non rilevabile'
               | 'perdita funzionalità'
               | 'senza fenomeni di degrado'
+              | 'nd'
             )
           | null;
         fenomeni_degrado?:
@@ -414,7 +414,7 @@ export interface Edifici {
 export interface Localita {
   id: string;
   name: string;
-  sottosistemi: (string | Sottosistemi)[];
+  sottosistemi?: (string | Sottosistemi)[] | null;
   slm: number;
   codice_localita: number;
   abitanti_residenti_2022?: number | null;
@@ -444,41 +444,45 @@ export interface Localita {
   elementi_urbanistici?:
     | ('fontana' | 'lavatoio' | 'panche' | 'passaggi coperti' | 'soste' | 'vasca in pietra monolitica')
     | null;
-  dati_1988?: {
-    accessibilita_principale?: ('sentiero' | 'mulattiera' | 'strada asfaltata' | 'strada sterrata')[] | null;
-    viabilita_interna_tipi?: ('pedonale' | 'veicolare')[] | null;
-    viabilita_interna_materiali?:
-      | (
-          | 'acciottolato'
-          | 'acciottolato a coltello con traversine trasversali'
-          | 'pavimentata'
-          | 'piode'
-          | 'terra battuta'
-        )[]
-      | null;
-    reti_e_servizi?:
-      | (
-          | 'rete idrica'
-          | 'rete elettrica'
-          | 'illuminazione pubblica'
-          | 'rete telefonica'
-          | 'telefono pubblico'
-          | 'cimitero'
-          | 'bar trattoria'
-          | 'pensione'
-        )[]
-      | null;
-    uso_pre?: ('abbandono' | 'discontinuo' | 'permanente' | 'stagionale') | null;
-    uso?: ('abbandono' | 'discontinuo' | 'permanente' | 'stagionale') | null;
-    stato_conservazione?:
-      | (
-          | 'complesso in discrete condizioni con interventi di recupero non corretti'
-          | 'complesso in discrete condizioni di conservazione'
-          | 'complesso in pessime condizioni di conservazione'
-          | 'senza gravi alterazioni ma in stato di abbandono e carente di manutenzione'
-        )
-      | null;
-  };
+  dati_1988?:
+    | {
+        accessibilita_principale?: ('sentiero' | 'mulattiera' | 'strada asfaltata' | 'strada sterrata')[] | null;
+        viabilita_interna_tipi?: ('pedonale' | 'veicolare')[] | null;
+        viabilita_interna_materiali?:
+          | (
+              | 'acciottolato'
+              | 'acciottolato a coltello con traversine trasversali'
+              | 'pavimentata'
+              | 'piode'
+              | 'terra battuta'
+            )[]
+          | null;
+        reti_e_servizi?:
+          | (
+              | 'rete idrica'
+              | 'rete elettrica'
+              | 'illuminazione pubblica'
+              | 'rete telefonica'
+              | 'telefono pubblico'
+              | 'cimitero'
+              | 'bar trattoria'
+              | 'pensione'
+            )[]
+          | null;
+        uso_pre?: ('abbandono' | 'discontinuo' | 'permanente' | 'stagionale') | null;
+        uso?: ('abbandono' | 'discontinuo' | 'permanente' | 'stagionale') | null;
+        stato_conservazione?:
+          | (
+              | 'complesso in discrete condizioni con interventi di recupero non corretti'
+              | 'complesso in discrete condizioni di conservazione'
+              | 'complesso in pessime condizioni di conservazione'
+              | 'senza gravi alterazioni ma in stato di abbandono e carente di manutenzione'
+            )
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  hide?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }

@@ -25,7 +25,7 @@ export const Localita: CollectionConfig = {
   },
   fields: [
     { ...F.name, required: true },
-    { ...F.relation('sottosistemi', 'sottosistemi'), required: true, hasMany: true },
+    { ...F.relation('sottosistemi', 'sottosistemi'), hasMany: true },
     {
       name: 'slm',
       type: 'number',
@@ -44,7 +44,7 @@ export const Localita: CollectionConfig = {
     { name: 'elementi_urbanistici', type: 'select', options: Object.values(elementi_urbanistici) },
     {
       name: 'dati_1988',
-      type: 'group',
+      type: 'array',
       fields: [
         ...field_ripetuti(),
         { name: 'uso_pre', type: 'select', options: Object.values(modalita_uso) },
@@ -55,6 +55,10 @@ export const Localita: CollectionConfig = {
           options: Object.values(stato_conservazione),
         },
       ],
+    },
+    {
+      name: 'hide',
+      type: 'checkbox',
     },
   ],
 }
