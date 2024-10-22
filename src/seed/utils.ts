@@ -70,3 +70,7 @@ export function find<A extends readonly string[]>(string: string, array: A): A[n
 export function intersect<A extends readonly string[]>(strings: string[], array: A): A[number][] {
   return A.intersection(strings, array)
 }
+
+/* Types */
+
+export type GenericRecord = Record<string, unknown>

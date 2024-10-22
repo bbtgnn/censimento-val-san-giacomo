@@ -207,7 +207,7 @@ export interface Edifici {
               id?: string | null;
             }[]
           | null;
-        stato?: ('presente' | 'non presente' | 'non disponibile' | 'parziale') | null;
+        presenza_censimento_1087?: ('presente' | 'non presente' | 'non disponibile' | 'parziale') | null;
         id?: string | null;
       }[]
     | null;
