@@ -38,7 +38,7 @@ export async function createEdifici(
   payload: BasePayload,
   localita: Localita[],
 ): Promise<Edifici[]> {
-  const edifici_csv = await readCsv(dataPath('Edifici-v2.csv'), csvOptions)
+  const edifici_csv = await readCsv(dataPath('Edifici-v3.csv'), csvOptions)
   const edifici_promises = edifici_csv.map((datum) => createEdificio(payload, datum, localita))
   return Promise.all(edifici_promises)
 }
