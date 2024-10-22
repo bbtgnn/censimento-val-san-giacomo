@@ -6,11 +6,11 @@ import {
   componenti_strutturali,
   fenomeni_degrado_strutturali,
   stati_censimento_1807,
-  stati_conservazione,
-  stati_utilizzo,
-  destinazioni_uso_moderno,
-  destinazioni_uso_1853,
-  destinazioni_uso_1951,
+  STATI_CONSERVAZIONE,
+  STATI_UTILIZZO,
+  DESTINAZIONI_USO_ATTUALI,
+  DESTINAZIONI_USO_1853,
+  DESTINAZIONI_USO_1951,
   caratteri_storico_culturali,
   pavimentazioni_esterne,
   impiantistica,
@@ -18,13 +18,14 @@ import {
   vincoli_tutele,
 } from './Edifici.utils'
 import * as F from '@/db/fields'
+import { String } from 'effect'
 
 //
 
 const field_conservazione: SelectField = {
   name: 'stato_conservazione',
   type: 'select',
-  options: Object.values(stati_conservazione),
+  options: Object.values(STATI_CONSERVAZIONE),
 }
 
 //
@@ -97,18 +98,18 @@ export const Edifici: CollectionConfig = {
         {
           name: 'stato_utilizzo',
           type: 'select',
-          options: Object.values(stati_utilizzo),
+          options: Object.values(STATI_UTILIZZO),
         },
         {
           name: 'stato_utilizzo_secondario',
           type: 'select',
-          options: Object.values(stati_utilizzo),
+          options: Object.values(STATI_UTILIZZO),
         },
         {
           name: 'stato_conservazione',
           type: 'select',
           hasMany: true,
-          options: Object.values(stati_conservazione),
+          options: Object.values(STATI_CONSERVAZIONE),
         },
         {
           name: 'destinazioni_uso',
@@ -122,14 +123,14 @@ export const Edifici: CollectionConfig = {
               name: 'tag_storico',
               type: 'select',
               options: [
-                ...Object.keys(destinazioni_uso_1853),
-                ...Object.values(destinazioni_uso_1951),
+                ...Object.keys(DESTINAZIONI_USO_1853).map(String.toLowerCase),
+                ...Object.values(DESTINAZIONI_USO_1951),
               ],
             },
             {
               name: 'tag_moderno',
               type: 'select',
-              options: Object.values(destinazioni_uso_moderno),
+              options: Object.values(DESTINAZIONI_USO_ATTUALI),
             },
           ],
         },

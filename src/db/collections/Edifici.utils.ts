@@ -1,4 +1,4 @@
-export const stati_utilizzo = [
+export const STATI_UTILIZZO = [
   'uso permanente',
   'uso temporaneo',
   'disuso',
@@ -7,9 +7,9 @@ export const stati_utilizzo = [
   'non presente',
 ] as const
 
-type StatoUtilizzo = (typeof stati_utilizzo)[number]
+export type StatoUtilizzo = (typeof STATI_UTILIZZO)[number]
 
-export const stati_conservazione = [
+export const STATI_CONSERVAZIONE = [
   'fenomeni di degrado diffusi',
   'fenomeni di degrado superficiali',
   'modifiche sostanziali caratteri tradizionali',
@@ -20,7 +20,7 @@ export const stati_conservazione = [
   'nd',
 ] as const
 
-export const destinazioni_uso_moderno = [
+export const DESTINAZIONI_USO_ATTUALI = [
   'commerciale',
   'luogo di culto',
   'multifunzione',
@@ -34,9 +34,9 @@ export const destinazioni_uso_moderno = [
   'nd', // Not in CSV, but used for 1853 conversion
 ] as const
 
-type DestinazioneUsoAttuale = (typeof destinazioni_uso_moderno)[number]
+export type DestinazioneUsoAttuale = (typeof DESTINAZIONI_USO_ATTUALI)[number]
 
-export const destinazioni_uso_1951 = [
+export const DESTINAZIONI_USO_1951 = [
   'PRATO',
   'NP',
   'URBANO',
@@ -45,7 +45,7 @@ export const destinazioni_uso_1951 = [
   'FA RURALE',
 ] as const
 
-export const destinazioni_uso_1853 = {
+export const DESTINAZIONI_USO_1853 = {
   CANTINA: 'produttivo rurale',
   'CANTINA D': {
     moderno: 'produttivo rurale',
@@ -101,11 +101,13 @@ export const destinazioni_uso_1853 = {
   STALLA: 'produttivo rurale',
   ZAPPATIVO: 'verde',
   ZERBO: 'verde',
-} as const satisfies Record<
-  string,
-  | DestinazioneUsoAttuale
-  | { label?: string; moderno: DestinazioneUsoAttuale; utilizzo?: StatoUtilizzo }
->
+} as const satisfies Record<string, DestinazioneUsoAttuale | ParsedDestinazioneUso1853>
+
+export type ParsedDestinazioneUso1853 = {
+  label?: string
+  moderno: DestinazioneUsoAttuale
+  utilizzo?: StatoUtilizzo
+}
 
 export const stati_censimento_1807 = [
   'presente',

@@ -14,7 +14,7 @@
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "types": "payload generate:types",
-    "seed": "payload run src/data/seed.ts"
+    "seed": "payload run src/seed/index.ts"
   },
   "dependencies": {
     "@payloadcms/db-mongodb": "beta",
