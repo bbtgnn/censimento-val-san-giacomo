@@ -91,6 +91,7 @@ export interface Edifici {
   id: string;
   localita?: (string | null) | Localita;
   sezione_localita?: string | null;
+  particella?: string | null;
   geolocalizzazione?: {
     /**
      * @minItems 2
@@ -127,8 +128,9 @@ export interface Edifici {
               | 'perdita funzionalità'
               | 'senza fenomeni di degrado'
               | 'nd'
-            )[]
+            )
           | null;
+        modifiche_sostanziali_caratteri_tradizionali?: boolean | null;
         destinazioni_uso?:
           | {
               nome?: string | null;

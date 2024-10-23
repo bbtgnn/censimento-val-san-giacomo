@@ -42,6 +42,12 @@ export const Edifici: CollectionConfig = {
   fields: [
     F.relation('localita', 'localita'), // TODO - Filter options based on [sottosistema]
     { name: 'sezione_localita', type: 'text' },
+
+    {
+      name: 'particella',
+      type: 'text',
+    },
+
     {
       name: 'geolocalizzazione',
       type: 'group',
@@ -99,8 +105,11 @@ export const Edifici: CollectionConfig = {
         {
           name: 'stato_conservazione',
           type: 'select',
-          hasMany: true,
           options: Object.values(STATI_CONSERVAZIONE),
+        },
+        {
+          name: 'modifiche_sostanziali_caratteri_tradizionali',
+          type: 'checkbox',
         },
         {
           name: 'destinazioni_uso',
@@ -114,7 +123,7 @@ export const Edifici: CollectionConfig = {
               name: 'tag_storico',
               type: 'select',
               options: [
-                ...Object.keys(DESTINAZIONI_USO_1853).map(String.toLowerCase),
+                ...Object.keys(DESTINAZIONI_USO_1853),
                 ...Object.values(DESTINAZIONI_USO_1951),
               ],
             },

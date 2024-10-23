@@ -30,7 +30,7 @@ import {
   vincoli_tutele,
 } from '@/db/collections/Edifici.utils'
 import assert from 'node:assert'
-import { Record, String as S } from 'effect'
+import { Array, Record, String as S } from 'effect'
 
 //
 
@@ -53,16 +53,31 @@ function createEdificio(
   assert(localita_record, 'missing località for edificio')
   const sezione_localita = parseString(datum, 'sezione località')
 
+  const stati_conservazione = intersect(
+    parseStringArray(datum, 'stato_conservazione_globale'),
+    STATI_CONSERVAZIONE,
+  )
+  const modifiche_sostanziali_caratteri_tradizionali = stati_conservazione.includes(
+    STATI_CONSERVAZIONE[2],
+  )
+  const stato_conservazione =
+    stati_conservazione.filter((item) => item != STATI_CONSERVAZIONE[2])[0] ?? 'nd'
+  assert(stato_conservazione)
+
+  const particella_2022 = parseString(datum, 'cat 2022')
+
   return payload.create({
     collection: 'edifici',
     data: {
       localita: localita_record.id,
       sezione_localita,
 
+      particella: particella_2022,
+
       anagrafica: [
         {
           anno: '2022',
-          particella: parseString(datum, 'cat 2022'),
+          particella: particella_2022,
           stato_utilizzo: find(parseString(datum, 'stato_utilizzo_attuale'), STATI_UTILIZZO),
 
           destinazioni_uso: intersect(
@@ -70,10 +85,8 @@ function createEdificio(
             DESTINAZIONI_USO_ATTUALI,
           ).map((tag_moderno) => ({ tag_moderno })),
 
-          stato_conservazione: intersect(
-            parseStringArray(datum, 'stato_conservazione_globale'),
-            STATI_CONSERVAZIONE,
-          ),
+          stato_conservazione,
+          modifiche_sostanziali_caratteri_tradizionali,
 
           accessibilita: intersect(
             parseStringArray(datum, 'accessibilità'),
