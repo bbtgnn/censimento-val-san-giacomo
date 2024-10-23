@@ -180,6 +180,46 @@ async function LocalitaCard({ localita }: { localita: Localita }) {
     Array.map(([string, number]) => [string, percent(number / anagrafiche_1853.length)]),
   )
 
+  // 1988
+
+  let percentuali_1988: Record<string, string> | undefined = undefined
+
+  if (localita.dati_1988) {
+    const reduceBase = {
+      edifici_civili: 0,
+      edifici_multifunzione: 0,
+      edifici_rovina: 0,
+      edifici_rurali: 0,
+    }
+
+    const x: typeof reduceBase = localita.dati_1988.reduce(
+      (prev, curr) => ({
+        edifici_civili: prev.edifici_civili + curr.edifici_civili,
+        edifici_rovina: prev.edifici_rovina + curr.edifici_rovina,
+        edifici_multifunzione: prev.edifici_multifunzione + curr.edifici_multifunzione,
+        edifici_rurali: prev.edifici_rurali + curr.edifici_rurali,
+      }),
+      reduceBase,
+    )
+
+    const totale = Record.reduce(x, 0, (prev, curr) => prev + curr)
+
+    const data = Record.mapKeys(x, (key): DestinazioneUsoAttuale => {
+      switch (key) {
+        case 'edifici_civili':
+          return 'residenziale'
+        case 'edifici_multifunzione':
+          return 'multifunzione'
+        case 'edifici_rovina':
+          return 'non rilevabile'
+        case 'edifici_rurali':
+          return 'produttivo rurale'
+      }
+    })
+
+    percentuali_1988 = Record.map(data, (v) => percent(v / totale))
+  }
+
   //
 
   return (
@@ -245,6 +285,22 @@ async function LocalitaCard({ localita }: { localita: Localita }) {
           ))}
         </ul>
       </div>
+
+      {percentuali_1988 && (
+        <div>
+          <h2>Censimento 1988</h2>
+          <div>
+            <p>Percentuali destinazione d'uso</p>
+            <ul>
+              {Object.entries(percentuali_1988).map(([tag, percent]) => (
+                <li key={tag}>
+                  {tag} - {percent}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       <h2>Censimento 1853</h2>
 

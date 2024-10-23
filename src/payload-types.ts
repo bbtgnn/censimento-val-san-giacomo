@@ -478,10 +478,10 @@ export interface Localita {
               | 'senza gravi alterazioni ma in stato di abbandono e carente di manutenzione'
             )
           | null;
-        edifici_civili?: number | null;
-        edifici_rurali?: number | null;
-        edifici_multifunzione?: number | null;
-        edifici_rovina?: number | null;
+        edifici_civili: number;
+        edifici_rurali: number;
+        edifici_multifunzione: number;
+        edifici_rovina: number;
         id?: string | null;
       }[]
     | null;
