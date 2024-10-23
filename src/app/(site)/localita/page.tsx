@@ -151,20 +151,25 @@ async function LocalitaCard({ localita }: { localita: Localita }) {
 
   // 1853
 
-  const anagrafiche_1853 = edifici.flatMap((e) => {
-    assert(e?.anagrafica)
-    const anagrafiche = e.anagrafica.filter((a) => a.anno == '1853')
-    assert(anagrafiche.length)
-    const destinazioni: DestinazioneUsoAttuale[] = anagrafiche.flatMap((a) => {
-      assert(a.destinazioni_uso)
-      if (!a.destinazioni_uso.at(0)) return ['non rilevabile']
-      return a.destinazioni_uso.map((d) => {
-        assert(d.tag_moderno)
-        return d.tag_moderno
-      })
+  const anagrafiche_1853 = edifici
+    .filter((e) => {
+      const anagrafiche = e?.anagrafica?.filter((a) => a.anno == '1853') ?? []
+      return Boolean(anagrafiche.length)
     })
-    return destinazioni.map((d) => ({ tag: d, peso: 1 / destinazioni.length }))
-  })
+    .flatMap((e) => {
+      assert(e?.anagrafica)
+      const anagrafiche = e.anagrafica.filter((a) => a.anno == '1853')
+      assert(anagrafiche.length)
+      const destinazioni: DestinazioneUsoAttuale[] = anagrafiche.flatMap((a) => {
+        assert(a.destinazioni_uso)
+        if (!a.destinazioni_uso.at(0)) return ['non rilevabile']
+        return a.destinazioni_uso.map((d) => {
+          assert(d.tag_moderno)
+          return d.tag_moderno
+        })
+      })
+      return destinazioni.map((d) => ({ tag: d, peso: 1 / destinazioni.length }))
+    })
 
   const percentuali_destinazione_uso_1853 = pipe(
     anagrafiche_1853,

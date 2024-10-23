@@ -46,6 +46,7 @@ export const Localita: CollectionConfig = {
       name: 'dati_1988',
       type: 'array',
       fields: [
+        { name: 'nome_sottolocalita', type: 'text' },
         ...field_ripetuti(),
         { name: 'uso_pre', type: 'select', options: Object.values(modalita_uso) },
         { name: 'uso', type: 'select', options: Object.values(modalita_uso) },
@@ -54,6 +55,10 @@ export const Localita: CollectionConfig = {
           type: 'select',
           options: Object.values(stato_conservazione),
         },
+        { name: 'edifici_civili', type: 'number' },
+        { name: 'edifici_rurali', type: 'number' },
+        { name: 'edifici_multifunzione', type: 'number' },
+        { name: 'edifici_rovina', type: 'number' },
       ],
     },
     {

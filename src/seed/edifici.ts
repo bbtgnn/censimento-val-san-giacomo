@@ -30,7 +30,7 @@ import {
   vincoli_tutele,
 } from '@/db/collections/Edifici.utils'
 import assert from 'node:assert'
-import { Array, Record, String as S } from 'effect'
+import { Array, Record, String as S, String } from 'effect'
 
 //
 
@@ -66,6 +66,31 @@ function createEdificio(
 
   const particella_2022 = parseString(datum, 'cat 2022')
 
+  const anagrafica_2022: Anagrafica = {
+    anno: '2022',
+    particella: particella_2022,
+    stato_utilizzo: find(parseString(datum, 'stato_utilizzo_attuale'), STATI_UTILIZZO),
+
+    destinazioni_uso: intersect(
+      parseStringArray(datum, 'destinazione_uso_attuale'),
+      DESTINAZIONI_USO_ATTUALI,
+    ).map((tag_moderno) => ({ tag_moderno })),
+
+    stato_conservazione,
+    modifiche_sostanziali_caratteri_tradizionali,
+
+    accessibilita: intersect(parseStringArray(datum, 'accessibilità'), accessibilita_edificio),
+  }
+
+  const anagrafica_1853 = anagrafica_1853_base(datum)
+  const anagrafiche_semplici_1853 = anagrafiche_1853_extra(datum)
+  if (anagrafica_1853) anagrafiche_semplici_1853.push(anagrafica_1853)
+
+  const anagrafiche: Anagrafica[] = [
+    anagrafica_2022,
+    ...anagrafiche_semplici_1853.map(expandAnagraficaSemplice),
+  ]
+
   return payload.create({
     collection: 'edifici',
     data: {
@@ -75,24 +100,7 @@ function createEdificio(
       particella: particella_2022,
 
       anagrafica: [
-        {
-          anno: '2022',
-          particella: particella_2022,
-          stato_utilizzo: find(parseString(datum, 'stato_utilizzo_attuale'), STATI_UTILIZZO),
-
-          destinazioni_uso: intersect(
-            parseStringArray(datum, 'destinazione_uso_attuale'),
-            DESTINAZIONI_USO_ATTUALI,
-          ).map((tag_moderno) => ({ tag_moderno })),
-
-          stato_conservazione,
-          modifiche_sostanziali_caratteri_tradizionali,
-
-          accessibilita: intersect(
-            parseStringArray(datum, 'accessibilità'),
-            accessibilita_edificio,
-          ),
-        },
+        ...anagrafiche,
         // {
         //   anno: '1951',
         //   particella: parseString(datum, 'cat 1951'),
@@ -102,8 +110,6 @@ function createEdificio(
         //     destinazioni_uso_1951,
         //   ).map((tag_storico) => ({ tag_storico })),
         // },
-        expandAnagraficaSemplice(anagrafica_1853_base(datum)),
-        ...anagrafiche_1853_extra(datum).map(expandAnagraficaSemplice),
         // {
         //   anno: '1807',
         //   stato: find(parseString(datum, 'cat 1807'), stati_censimento_1807),
@@ -244,15 +250,18 @@ type AnagraficaSemplice1853 = {
 
 //
 
-function anagrafica_1853_base(datum: GenericRecord): AnagraficaSemplice1853 {
+function anagrafica_1853_base(datum: GenericRecord): AnagraficaSemplice1853 | undefined {
   const destinazioni_uso = intersect(
     parseStringArray(datum, 'dest uso 1853').map(S.toLowerCase),
     Record.keys(DESTINAZIONI_USO_1853),
   )
 
+  const particella = parseString(datum, 'cat 1853')
+  if (String.isEmpty(particella)) return undefined
+
   return {
     anno: '1853',
-    particella: parseString(datum, 'cat 1853'),
+    particella,
     destinazioni_uso,
   }
 }

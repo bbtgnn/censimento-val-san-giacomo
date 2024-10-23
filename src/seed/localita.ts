@@ -4,6 +4,7 @@ import {
   csvOptions,
   dataPath,
   intersect,
+  parseNumber,
   parseString,
   parseStringArray,
   readCsv,
@@ -15,6 +16,7 @@ import {
   viabilita_interna_materiali,
   viabilita_interna_tipi,
 } from '@/db/collections/Localita.utils'
+import { assert } from 'console'
 
 //
 
@@ -24,11 +26,18 @@ export async function createLocalita(payload: BasePayload, sottosistemi: Sottosi
     delimiter: ';',
   })
 
-  // TODO
-  // const localita_1988_csv = await readCsv(filePath('1988-NAF.csv'), {
-  //   ...csvOptions,
-  //   delimiter: ',',
-  // })
+  const localita_1988_csv = await readCsv(dataPath('1988-NAF.csv'), {
+    ...csvOptions,
+    delimiter: ',',
+  })
+
+  const localita_1988 = localita_1988_csv.map(
+    (datum) =>
+      ({
+        ...datum,
+        ['Località']: removeNotionUrl(parseString(datum, 'Località')),
+      }) as Record<string, unknown>,
+  )
 
   const localita: Localita[] = []
 
@@ -59,6 +68,19 @@ export async function createLocalita(payload: BasePayload, sottosistemi: Sottosi
       .map((key) => reti_servizi[key as keyof typeof reti_servizi])
       .filter(Boolean)
 
+    // 1988
+
+    // TODO - Complete transfer
+    const sottolocalita_1988 = localita_1988.filter((loc) => parseString(loc, 'Località') == name)
+    const dati_1988: Dati1988[] = sottolocalita_1988.map((datum) => ({
+      edifici_civili: parseNumber(datum, 'edifici civili'),
+      edifici_rovina: parseNumber(datum, 'edifici in rovina'),
+      edifici_rurali: parseNumber(datum, 'edifici rurali'),
+      edifici_multifunzione: parseNumber(datum, 'edifici multifunzione'),
+    }))
+
+    //
+
     const loc = await payload.create({
       collection: 'localita',
       data: {
@@ -72,7 +94,7 @@ export async function createLocalita(payload: BasePayload, sottosistemi: Sottosi
         accessibilita_principale: accessibilita,
         reti_e_servizi,
         hide,
-        dati_1988: [],
+        dati_1988: dati_1988.length === 0 ? undefined : dati_1988,
       },
     })
 
@@ -81,6 +103,8 @@ export async function createLocalita(payload: BasePayload, sottosistemi: Sottosi
 
   return localita
 }
+
+type Dati1988 = NonNullable<Localita['dati_1988']>[number]
 
 /* OLD CODE - Sezioni localita */
 

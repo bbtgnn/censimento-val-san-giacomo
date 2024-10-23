@@ -444,6 +444,7 @@ export interface Localita {
     | null;
   dati_1988?:
     | {
+        nome_sottolocalita?: string | null;
         accessibilita_principale?: ('sentiero' | 'mulattiera' | 'strada asfaltata' | 'strada sterrata')[] | null;
         viabilita_interna_tipi?: ('pedonale' | 'veicolare')[] | null;
         viabilita_interna_materiali?:
@@ -477,6 +478,10 @@ export interface Localita {
               | 'senza gravi alterazioni ma in stato di abbandono e carente di manutenzione'
             )
           | null;
+        edifici_civili?: number | null;
+        edifici_rurali?: number | null;
+        edifici_multifunzione?: number | null;
+        edifici_rovina?: number | null;
         id?: string | null;
       }[]
     | null;

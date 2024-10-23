@@ -59,6 +59,11 @@ export function parseString(record: Record<string, unknown>, key: string) {
   return String(record[key]).trim()
 }
 
+export function parseNumber(record: Record<string, unknown>, key: string) {
+  if (!(key in record)) throw new Error(`No key in record: ${key}`)
+  return Number(record[key])
+}
+
 export function parseStringArray(record: Record<string, unknown>, key: string, separator = ',') {
   return parseString(record, key).split(separator).map(S.trim)
 }
