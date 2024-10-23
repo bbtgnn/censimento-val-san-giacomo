@@ -1,7 +1,12 @@
 import { getPayloadHMR } from '@payloadcms/next/utilities'
 import config from '@payload-config'
 import { Edifici, Localita, Sottosistemi } from '@/payload-types'
-import { ComponenteStrutturale, DestinazioneUsoAttuale } from '@/db/collections/Edifici.utils'
+import {
+  ComponenteStrutturale,
+  DestinazioneUsoAttuale,
+  DESTINAZIONI_USO_ATTUALI,
+  STATI_UTILIZZO,
+} from '@/db/collections/Edifici.utils'
 import { relation } from '@/utils/data'
 import { Array, pipe, Record, String } from 'effect'
 import assert from 'node:assert'
@@ -24,12 +29,30 @@ export default async function Page() {
       <nav>
         <a href="/home">{'<- Back to home'}</a>
       </nav>
-      {localita.map((e) => (
-        <div key={e.id}>
-          <hr />
-          <LocalitaCard localita={e} />
-        </div>
-      ))}
+      <table>
+        <thead>
+          <th>Localita</th>
+          <th>Comune</th>
+          <th>Sottosistemi</th>
+          <th>Sezioni</th>
+          <th>Slm</th>
+          <th>COD LOC</th>
+          <th>N Edifici</th>
+          <th>Dest uso non rilevabile</th>
+          {DESTINAZIONI_USO_ATTUALI.map((d) => (
+            <th key={d}>{d} 2022</th>
+          ))}
+          <th>Stato utilizzo non rilevabile</th>
+          {STATI_UTILIZZO.map((d) => (
+            <th key={d}>{d} 2022</th>
+          ))}
+        </thead>
+        <tbody>
+          {localita.map((e) => (
+            <LocalitaCard key={e.id} localita={e} />
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }
@@ -71,7 +94,7 @@ async function LocalitaCard({ localita }: { localita: Localita }) {
     return non_rilevabile ?? false
   })
 
-  const percentuali_destinazione_uso = pipe(
+  const edifici_raggruppati_per_destinazione_uso = pipe(
     destinazione_rilevabile,
     Array.flatMap((e) => {
       const anagrafica_2022 = e?.anagrafica?.find((a) => a.anno == '2022')
@@ -82,17 +105,36 @@ async function LocalitaCard({ localita }: { localita: Localita }) {
         .map((d) => d.tag_moderno)
         .filter((s) => typeof s == 'string')
       const tag_moderni_peso = tag_moderni.map((t) => ({
+        edificio: e,
         tag_uso: t,
         peso: 1 / tag_moderni.length,
       }))
       return tag_moderni_peso
     }),
     Array.groupBy((item) => item.tag_uso),
+  )
+
+  const percentuali_destinazione_uso = pipe(
+    edifici_raggruppati_per_destinazione_uso,
     Record.map((entries) => entries.reduce((prev, curr) => prev + curr.peso, 0)),
     Record.toEntries,
     (data) => data.sort((a, b) => b[1] - a[1]),
     Array.map(([string, number]) => [string, percent(number / destinazione_rilevabile.length)]),
   )
+
+  // const sottopercentuali_destinazione_uso = pipe(
+  //   edifici_raggruppati_per_destinazione_uso,
+  //   Record.map((entries) => entries.map((e) => e.edificio)),
+  //   Record.map((edifici) => {
+  //     edifici.map((e) => {
+  //       const anagrafica_2022 = e?.anagrafica?.find((a) => (a.anno = '2022'))
+  //       assert(anagrafica_2022)
+  //       const { stato_conservazione, stato_utilizzo } = anagrafica_2022
+  //       assert(stato_conservazione)
+  //       assert(stato_utilizzo, e?.particella)
+  //     })
+  //   }),
+  // )
 
   const [utilizzo_rilevabile, utilizzo_non_rilevabile] = Array.partition(edifici, (e) => {
     const anagrafica_2022 = e?.anagrafica?.find((a) => a.anno == '2022')
@@ -223,98 +265,89 @@ async function LocalitaCard({ localita }: { localita: Localita }) {
   //
 
   return (
-    <div>
-      <h1>{localita_nome}</h1>
-
-      <h2>Anagrafica generale</h2>
-      <p>Sottosistema territoriale: {sottosistemi?.map((s) => s?.name).join(', ')} </p>
-      <p>
-        Comune:{' '}
+    <tr>
+      <td>{localita_nome}</td>
+      <td>
         {Array.dedupe(comuni ?? [])
           .map((c) => c?.name)
           .join(', ')}
-      </p>
-      {Boolean(sezioni_localita.length) && <p>Sezioni località: {sezioni_localita.join(', ')}</p>}
-      <p>SLM: {Boolean(localita.slm) ? localita.slm : 'nd'}</p>
-      <p>Codice localita: {Boolean(localita.codice_localita) ? localita.codice_localita : 'nd'}</p>
+      </td>
+      <td>{sottosistemi?.map((s) => s?.name).join(', ')}</td>
+      <td>{sezioni_localita.join(', ')}</td>
+      <td>{Boolean(localita.slm) ? localita.slm : 'nd'}</td>
+      <td>{Boolean(localita.codice_localita) ? localita.codice_localita : 'nd'}</td>
+      <td>{edifici.length}</td>
+      <td>{percent(destinazione_non_rilevabile.length / edifici.length)}</td>
+      {DESTINAZIONI_USO_ATTUALI.map((d) => {
+        const x = percentuali_destinazione_uso.find(([tag]) => tag == d)
+        return <td key={d}>{x ? x[1] : '0%'}</td>
+      })}
+      <td>{percent(utilizzo_non_rilevabile.length / edifici.length)}</td>
+      {STATI_UTILIZZO.map((d) => {
+        const x = percentuali_stato_utilizzo.find(([tag]) => tag == d)
+        return <td key={d}>{x ? x[1] : '0%'}</td>
+      })}
+    </tr>
 
-      <h2>Censimento attuale</h2>
-      <p>Totale edifici: {edifici.length}</p>
+    //   <div>
+    //     <p>
+    //       Edifici con stato di utilizzo non rilevabile: {utilizzo_non_rilevabile.length} (
+    //       )
+    //     </p>
+    //     <p>Percentuali stato di utilizzo degli edifici rilevabili:</p>
+    //     <ul>
+    //       {percentuali_stato_utilizzo.map(([tag, percent]) => (
+    //         <li key={tag}>
+    //           {tag} - {percent}
+    //         </li>
+    //       ))}
+    //     </ul>
+    //   </div>
 
-      <div>
-        <p>
-          Edifici con destinazione d&apos;uso non rilevabile: {destinazione_non_rilevabile.length} (
-          {percent(destinazione_non_rilevabile.length / edifici.length)})
-        </p>
-        <p>Percentuali destinazioni d&apos;uso degli edifici rilevabili:</p>
-        <ul>
-          {percentuali_destinazione_uso.map(([tag, percent]) => (
-            <li key={tag}>
-              {tag} - {percent}
-            </li>
-          ))}
-        </ul>
-      </div>
+    //   <div>
+    //     <p>
+    //       Edifici con stato di conservazione non rilevabile: {conservazione_non_rilevabile.length} (
+    //       {percent(conservazione_non_rilevabile.length / edifici.length)})
+    //     </p>
+    //     <p>Percentuali stato di conservazione degli edifici rilevabili:</p>
+    //     <ul>
+    //       {percentuali_conservazione.map(([tag, percent]) => (
+    //         <li key={tag}>
+    //           {tag} - {percent}
+    //         </li>
+    //       ))}
+    //     </ul>
+    //   </div>
 
-      <div>
-        <p>
-          Edifici con stato di utilizzo non rilevabile: {utilizzo_non_rilevabile.length} (
-          {percent(utilizzo_non_rilevabile.length / edifici.length)})
-        </p>
-        <p>Percentuali stato di utilizzo degli edifici rilevabili:</p>
-        <ul>
-          {percentuali_stato_utilizzo.map(([tag, percent]) => (
-            <li key={tag}>
-              {tag} - {percent}
-            </li>
-          ))}
-        </ul>
-      </div>
+    //   {percentuali_1988 && (
+    //     <div>
+    //       <h2>Censimento 1988</h2>
+    //       <div>
+    //         <p>Percentuali destinazione d'uso</p>
+    //         <ul>
+    //           {Object.entries(percentuali_1988).map(([tag, percent]) => (
+    //             <li key={tag}>
+    //               {tag} - {percent}
+    //             </li>
+    //           ))}
+    //         </ul>
+    //       </div>
+    //     </div>
+    //   )}
 
-      <div>
-        <p>
-          Edifici con stato di conservazione non rilevabile: {conservazione_non_rilevabile.length} (
-          {percent(conservazione_non_rilevabile.length / edifici.length)})
-        </p>
-        <p>Percentuali stato di conservazione degli edifici rilevabili:</p>
-        <ul>
-          {percentuali_conservazione.map(([tag, percent]) => (
-            <li key={tag}>
-              {tag} - {percent}
-            </li>
-          ))}
-        </ul>
-      </div>
+    //   <h2>Censimento 1853</h2>
 
-      {percentuali_1988 && (
-        <div>
-          <h2>Censimento 1988</h2>
-          <div>
-            <p>Percentuali destinazione d'uso</p>
-            <ul>
-              {Object.entries(percentuali_1988).map(([tag, percent]) => (
-                <li key={tag}>
-                  {tag} - {percent}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
-
-      <h2>Censimento 1853</h2>
-
-      <div>
-        <p>Percentuali destinazione d&apos;uso</p>
-        <ul>
-          {percentuali_destinazione_uso_1853.map(([tag, percent]) => (
-            <li key={tag}>
-              {tag} - {percent}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
+    //   <div>
+    //     <p>Percentuali destinazione d&apos;uso</p>
+    //     <ul>
+    //       {percentuali_destinazione_uso_1853.map(([tag, percent]) => (
+    //         <li key={tag}>
+    //           {tag} - {percent}
+    //         </li>
+    //       ))}
+    //     </ul>
+    //   </div>
+    // </div>
   )
 }
 
