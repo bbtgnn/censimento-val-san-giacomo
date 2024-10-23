@@ -31,7 +31,6 @@ export const DESTINAZIONI_USO_ATTUALI = [
   'servizio',
   'verde', // Not in CSV, but used for 1853 conversion
   'servizio accessorio', // Not in CSV, but used for 1853 conversion
-  'nd', // Not in CSV, but used for 1853 conversion
 ] as const
 
 export type DestinazioneUsoAttuale = (typeof DESTINAZIONI_USO_ATTUALI)[number]
@@ -85,7 +84,7 @@ export const DESTINAZIONI_USO_1853 = {
     utilizzo: 'disuso',
   },
   mulino: 'produttivo rurale',
-  nd: 'nd',
+  nd: 'non rilevabile',
   'p cantina': { label: 'porzione di cantina', moderno: 'produttivo rurale' },
   'p casa': { label: 'porzione di casa', moderno: 'residenziale' },
   'p cc': { label: 'porzione di casa colonica', moderno: 'residenziale' },

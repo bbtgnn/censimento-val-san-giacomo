@@ -1,7 +1,7 @@
 import { getPayloadHMR } from '@payloadcms/next/utilities'
 import config from '@payload-config'
 import { Edifici, Localita, Sottosistemi } from '@/payload-types'
-import { ComponenteStrutturale } from '@/db/collections/Edifici.utils'
+import { ComponenteStrutturale, DestinazioneUsoAttuale } from '@/db/collections/Edifici.utils'
 import { relation } from '@/utils/data'
 import { Array, pipe, Record, String } from 'effect'
 import assert from 'node:assert'
@@ -58,6 +58,8 @@ async function LocalitaCard({ localita }: { localita: Localita }) {
   const sezioni_localita = Array.dedupe(edifici.map((e) => e?.sezione_localita))
     .filter(String.isString)
     .filter(String.isNonEmpty)
+
+  // 2022
 
   const [destinazione_rilevabile, destinazione_non_rilevabile] = Array.partition(edifici, (e) => {
     const anagrafica_2022 = e?.anagrafica?.find((a) => a.anno == '2022')
@@ -147,6 +149,34 @@ async function LocalitaCard({ localita }: { localita: Localita }) {
     Array.map(([string, number]) => [string, percent(number / conservazione_rilevabile.length)]),
   )
 
+  // 1853
+
+  const anagrafiche_1853 = edifici.flatMap((e) => {
+    assert(e?.anagrafica)
+    const anagrafiche = e.anagrafica.filter((a) => a.anno == '1853')
+    assert(anagrafiche.length)
+    const destinazioni: DestinazioneUsoAttuale[] = anagrafiche.flatMap((a) => {
+      assert(a.destinazioni_uso)
+      if (!a.destinazioni_uso.at(0)) return ['non rilevabile']
+      return a.destinazioni_uso.map((d) => {
+        assert(d.tag_moderno)
+        return d.tag_moderno
+      })
+    })
+    return destinazioni.map((d) => ({ tag: d, peso: 1 / destinazioni.length }))
+  })
+
+  const percentuali_destinazione_uso_1853 = pipe(
+    anagrafiche_1853,
+    Array.groupBy((item) => item.tag),
+    Record.map((entries) => entries.reduce((prev, curr) => prev + curr.peso, 0)),
+    Record.toEntries,
+    (data) => data.sort((a, b) => b[1] - a[1]),
+    Array.map(([string, number]) => [string, percent(number / anagrafiche_1853.length)]),
+  )
+
+  //
+
   return (
     <div>
       <h1>{localita_nome}</h1>
@@ -204,6 +234,19 @@ async function LocalitaCard({ localita }: { localita: Localita }) {
         <p>Percentuali stato di conservazione degli edifici rilevabili:</p>
         <ul>
           {percentuali_conservazione.map(([tag, percent]) => (
+            <li key={tag}>
+              {tag} - {percent}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <h2>Censimento 1853</h2>
+
+      <div>
+        <p>Percentuali destinazione d&apos;uso</p>
+        <ul>
+          {percentuali_destinazione_uso_1853.map(([tag, percent]) => (
             <li key={tag}>
               {tag} - {percent}
             </li>

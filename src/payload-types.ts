@@ -199,7 +199,6 @@ export interface Edifici {
                     | 'servizio'
                     | 'verde'
                     | 'servizio accessorio'
-                    | 'nd'
                   )
                 | null;
               id?: string | null;
