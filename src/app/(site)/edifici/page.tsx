@@ -1,7 +1,8 @@
 import { getPayloadHMR } from '@payloadcms/next/utilities'
 import config from '@payload-config'
-import { Edifici, Localita, Sottosistemi } from '@/payload-types'
+import { Edifici } from '@/payload-types'
 import { ComponenteStrutturale } from '@/db/collections/Edifici.utils'
+import { relation } from '@/utils/data'
 
 const payload = await getPayloadHMR({ config })
 
@@ -47,8 +48,6 @@ export default async function Page() {
 function EdificioRow({ edificio }: { edificio: Edifici }) {
   const localita = relation(edificio.localita)
   const localita_nome = localita?.name
-  const sottosistema = relation(localita?.sottosistema)
-  const sottosistema_nome = sottosistema?.name
 
   const anagrafica_2022 = getAnagraficaByYear(edificio, '2022')
   const cat_2022 = anagrafica_2022?.particella
@@ -62,7 +61,7 @@ function EdificioRow({ edificio }: { edificio: Edifici }) {
   const destinazione_1853 = anagrafica_1853?.destinazioni_uso?.map((d) => d.tag_storico).join(', ')
 
   const anagrafica_1807 = getAnagraficaByYear(edificio, '1807')
-  const cat_1807 = anagrafica_1807?.stato
+  const cat_1807 = anagrafica_1807?.presenza_censimento_1087
 
   const destinazione_attuale = anagrafica_2022?.destinazioni_uso
     ?.map((d) => d.tag_moderno)
@@ -74,7 +73,6 @@ function EdificioRow({ edificio }: { edificio: Edifici }) {
   return (
     <tr>
       <td>{edificio.id}</td>
-      <td>{sottosistema_nome}</td>
       <td>{localita_nome}</td>
       <td>{cat_2022}</td>
       <td>{cat_1951}</td>
@@ -94,15 +92,4 @@ function getAnagraficaByYear(edificio: Edifici, anno: string) {
 
 function getAnalisiStrutturale(edificio: Edifici, componente: ComponenteStrutturale) {
   return edificio.analisi_strutturale?.find((d) => d.componente === componente)
-}
-
-//
-
-type RemoveString<T> = Exclude<T, string>
-type Nullable<T> = T | null | undefined
-type PayloadRelation<T> = Nullable<T> | string
-
-function relation<T>(rel: PayloadRelation<T>): Nullable<T> {
-  if (typeof rel == 'string') throw new Error('Relation not expanded')
-  else return rel
 }

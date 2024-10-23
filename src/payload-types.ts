@@ -16,7 +16,7 @@ export interface Config {
     edifici: Edifici;
     sottosistemi: Sottosistemi;
     localita: Localita;
-    sezione_localita: SezioneLocalita;
+    comuni: Comuni;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
@@ -90,7 +90,8 @@ export interface Media {
 export interface Edifici {
   id: string;
   localita?: (string | null) | Localita;
-  sezione_localita?: (string | null) | SezioneLocalita;
+  sezione_localita?: string | null;
+  particella?: string | null;
   geolocalizzazione?: {
     /**
      * @minItems 2
@@ -104,7 +105,6 @@ export interface Edifici {
     | {
         anno?: string | null;
         particella?: string | null;
-        subalterno?: string | null;
         accessibilita?: ('sentiero' | 'vicolo pedonale' | 'strada carrabile' | 'strada in terra battuta')[] | null;
         unita?:
           | {
@@ -118,9 +118,6 @@ export interface Edifici {
         stato_utilizzo?:
           | ('uso permanente' | 'uso temporaneo' | 'disuso' | 'disuso - rudere' | 'non rilevabile' | 'non presente')
           | null;
-        stato_utilizzo_secondario?:
-          | ('uso permanente' | 'uso temporaneo' | 'disuso' | 'disuso - rudere' | 'non rilevabile' | 'non presente')
-          | null;
         stato_conservazione?:
           | (
               | 'fenomeni di degrado diffusi'
@@ -130,62 +127,60 @@ export interface Edifici {
               | 'non rilevabile'
               | 'perdita funzionalità'
               | 'senza fenomeni di degrado'
-            )[]
+              | 'nd'
+            )
           | null;
+        modifiche_sostanziali_caratteri_tradizionali?: boolean | null;
         destinazioni_uso?:
           | {
               nome?: string | null;
               tag_storico?:
                 | (
-                    | 'A CASA DIR'
-                    | 'BOSCO CEDU'
-                    | 'CANTINA D'
-                    | 'CANTINA'
-                    | 'CASA ABB'
-                    | 'CASA COAD'
-                    | 'CASA DIR'
-                    | 'CASA IR'
-                    | 'CASA PARRO'
-                    | 'CASA'
-                    | 'CASELLO'
-                    | 'CASERMA'
-                    | 'CASOLARE A'
-                    | 'CASOLARE D'
-                    | 'CASOLARE'
-                    | 'CASTAGNETO'
-                    | 'CC'
-                    | 'CEPPO NUDO'
-                    | 'CHECK - ND'
-                    | 'COLTIVO'
-                    | 'DOGANA'
-                    | 'ED RELIGIOSO'
-                    | 'F'
-                    | 'FIENILE'
-                    | 'LT ABB'
-                    | 'LT'
-                    | 'luogo superiore'
-                    | 'MULINO'
+                    | 'cantina'
+                    | 'cantina d'
+                    | 'casa'
+                    | 'casa abb'
+                    | 'casa cantoniera'
+                    | 'casa coadiutorale'
+                    | 'casa dir'
+                    | 'casa guardiano'
+                    | 'casa parro'
+                    | 'casa uffici postali'
+                    | 'casello'
+                    | 'caserma'
+                    | 'casolare'
+                    | 'casolare a'
+                    | 'casolare d'
+                    | 'castagneto'
+                    | 'cc'
+                    | 'ceppo nudo'
+                    | 'coltivo'
+                    | 'dogana'
+                    | 'ed religioso'
+                    | 'fabbrica'
+                    | 'fienile'
+                    | 'ls'
+                    | 'lt'
+                    | 'lt abb'
+                    | 'mulino'
                     | 'nd'
-                    | 'NP'
-                    | 'P CANTINA'
-                    | 'P CASA ABB'
-                    | 'P CASA'
-                    | 'P CASELLO'
-                    | 'P CC'
-                    | 'P F'
-                    | 'P FIENILE'
-                    | 'P LT'
-                    | 'P SF'
-                    | 'P STALLA'
-                    | 'PASCOLO'
-                    | 'PCC'
+                    | 'p cantina'
+                    | 'p casa'
+                    | 'p cc'
+                    | 'p fienile'
+                    | 'p lt'
+                    | 'p sf'
+                    | 'p stalla'
+                    | 'pasc alpe'
+                    | 'pascolo'
+                    | 'prato'
+                    | 'sasso n'
+                    | 'sf'
+                    | 'stalla'
+                    | 'zappativo'
+                    | 'zerbo'
                     | 'PRATO'
-                    | 'S'
-                    | 'SASSO N'
-                    | 'SF'
-                    | 'STALLA'
-                    | 'ZAPPATIVO'
-                    | 'ZERBO'
+                    | 'NP'
                     | 'URBANO'
                     | 'FA URBANO'
                     | 'PFA RURALE'
@@ -199,17 +194,17 @@ export interface Edifici {
                     | 'multifunzione'
                     | 'non rilevabile'
                     | 'produttivo'
-                    | 'produttivo industriale'
                     | 'produttivo rurale'
                     | 'residenziale'
                     | 'servizio'
+                    | 'verde'
                     | 'servizio accessorio'
                   )
                 | null;
               id?: string | null;
             }[]
           | null;
-        stato?: ('presente' | 'non presente' | 'non disponibile' | 'parziale') | null;
+        presenza_censimento_1087?: ('presente' | 'non presente' | 'non disponibile' | 'parziale') | null;
         id?: string | null;
       }[]
     | null;
@@ -255,6 +250,7 @@ export interface Edifici {
               | 'non rilevabile'
               | 'perdita funzionalità'
               | 'senza fenomeni di degrado'
+              | 'nd'
             )
           | null;
         fenomeni_degrado?:
@@ -338,6 +334,7 @@ export interface Edifici {
               | 'non rilevabile'
               | 'perdita funzionalità'
               | 'senza fenomeni di degrado'
+              | 'nd'
             )
           | null;
         fenomeni_degrado?:
@@ -414,8 +411,81 @@ export interface Edifici {
  */
 export interface Localita {
   id: string;
-  name?: string | null;
-  sottosistema?: (string | null) | Sottosistemi;
+  name: string;
+  sottosistemi?: (string | Sottosistemi)[] | null;
+  slm: number;
+  codice_localita: number;
+  abitanti_residenti_2022?: number | null;
+  accessibilita_principale?: ('sentiero' | 'mulattiera' | 'strada asfaltata' | 'strada sterrata')[] | null;
+  viabilita_interna_tipi?: ('pedonale' | 'veicolare')[] | null;
+  viabilita_interna_materiali?:
+    | (
+        | 'acciottolato'
+        | 'acciottolato a coltello con traversine trasversali'
+        | 'pavimentata'
+        | 'piode'
+        | 'terra battuta'
+      )[]
+    | null;
+  reti_e_servizi?:
+    | (
+        | 'rete idrica'
+        | 'rete elettrica'
+        | 'illuminazione pubblica'
+        | 'rete telefonica'
+        | 'telefono pubblico'
+        | 'cimitero'
+        | 'bar trattoria'
+        | 'pensione'
+      )[]
+    | null;
+  elementi_urbanistici?:
+    | ('fontana' | 'lavatoio' | 'panche' | 'passaggi coperti' | 'soste' | 'vasca in pietra monolitica')
+    | null;
+  dati_1988?:
+    | {
+        nome_sottolocalita?: string | null;
+        accessibilita_principale?: ('sentiero' | 'mulattiera' | 'strada asfaltata' | 'strada sterrata')[] | null;
+        viabilita_interna_tipi?: ('pedonale' | 'veicolare')[] | null;
+        viabilita_interna_materiali?:
+          | (
+              | 'acciottolato'
+              | 'acciottolato a coltello con traversine trasversali'
+              | 'pavimentata'
+              | 'piode'
+              | 'terra battuta'
+            )[]
+          | null;
+        reti_e_servizi?:
+          | (
+              | 'rete idrica'
+              | 'rete elettrica'
+              | 'illuminazione pubblica'
+              | 'rete telefonica'
+              | 'telefono pubblico'
+              | 'cimitero'
+              | 'bar trattoria'
+              | 'pensione'
+            )[]
+          | null;
+        uso_pre?: ('abbandono' | 'discontinuo' | 'permanente' | 'stagionale') | null;
+        uso?: ('abbandono' | 'discontinuo' | 'permanente' | 'stagionale') | null;
+        stato_conservazione?:
+          | (
+              | 'complesso in discrete condizioni con interventi di recupero non corretti'
+              | 'complesso in discrete condizioni di conservazione'
+              | 'complesso in pessime condizioni di conservazione'
+              | 'senza gravi alterazioni ma in stato di abbandono e carente di manutenzione'
+            )
+          | null;
+        edifici_civili: number;
+        edifici_rurali: number;
+        edifici_multifunzione: number;
+        edifici_rovina: number;
+        id?: string | null;
+      }[]
+    | null;
+  hide?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -425,18 +495,19 @@ export interface Localita {
  */
 export interface Sottosistemi {
   id: string;
-  name?: string | null;
+  name: string;
+  comune: string | Comuni;
+  sottosistema_storico?: (string | null) | Sottosistemi;
   updatedAt: string;
   createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "sezione_localita".
+ * via the `definition` "comuni".
  */
-export interface SezioneLocalita {
+export interface Comuni {
   id: string;
-  name?: string | null;
-  localita?: (string | null) | Localita;
+  name: string;
   updatedAt: string;
   createdAt: string;
 }

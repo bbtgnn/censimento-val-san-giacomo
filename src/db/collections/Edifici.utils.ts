@@ -1,4 +1,4 @@
-export const stati_utilizzo = [
+export const STATI_UTILIZZO = [
   'uso permanente',
   'uso temporaneo',
   'disuso',
@@ -7,7 +7,9 @@ export const stati_utilizzo = [
   'non presente',
 ] as const
 
-export const stati_conservazione = [
+export type StatoUtilizzo = (typeof STATI_UTILIZZO)[number]
+
+export const STATI_CONSERVAZIONE = [
   'fenomeni di degrado diffusi',
   'fenomeni di degrado superficiali',
   'modifiche sostanziali caratteri tradizionali',
@@ -15,22 +17,25 @@ export const stati_conservazione = [
   'non rilevabile',
   'perdita funzionalità',
   'senza fenomeni di degrado',
+  'nd',
 ] as const
 
-export const destinazioni_uso_moderno = [
+export const DESTINAZIONI_USO_ATTUALI = [
   'commerciale',
   'luogo di culto',
   'multifunzione',
   'non rilevabile',
   'produttivo',
-  'produttivo industriale',
   'produttivo rurale',
   'residenziale',
   'servizio',
-  'servizio accessorio',
+  'verde', // Not in CSV, but used for 1853 conversion
+  'servizio accessorio', // Not in CSV, but used for 1853 conversion
 ] as const
 
-export const destinazioni_uso_1951 = [
+export type DestinazioneUsoAttuale = (typeof DESTINAZIONI_USO_ATTUALI)[number]
+
+export const DESTINAZIONI_USO_1951 = [
   'PRATO',
   'NP',
   'URBANO',
@@ -39,59 +44,73 @@ export const destinazioni_uso_1951 = [
   'FA RURALE',
 ] as const
 
-export const destinazioni_uso_1853 = [
-  'A CASA DIR',
-  'BOSCO CEDU',
-  'CANTINA D',
-  'CANTINA',
-  'CASA ABB',
-  'CASA COAD',
-  'CASA DIR',
-  'CASA IR',
-  'CASA PARRO',
-  'CASA',
-  'CASELLO',
-  'CASERMA',
-  'CASOLARE A',
-  'CASOLARE D',
-  'CASOLARE',
-  'CASTAGNETO',
-  'CC',
-  'CEPPO NUDO',
-  'CHECK - ND',
-  'COLTIVO',
-  'DOGANA',
-  'ED RELIGIOSO',
-  'F',
-  'FIENILE',
-  'LT ABB',
-  'LT',
-  'luogo superiore',
-  'MULINO',
-  'nd',
-  'NP',
-  'P CANTINA',
-  'P CASA ABB',
-  'P CASA',
-  'P CASELLO',
-  'P CC',
-  'P F',
-  'P FIENILE',
-  'P LT',
-  'P SF',
-  'P STALLA',
-  'PASCOLO',
-  'PCC',
-  'PRATO',
-  'S',
-  'SASSO N',
-  'SF',
-  'STALLA',
-  'ZAPPATIVO',
-  'ZERBO',
-] as const
+export const DESTINAZIONI_USO_1853 = {
+  cantina: 'produttivo rurale',
+  'cantina d': {
+    moderno: 'produttivo rurale',
+    label: 'cantina diroccata',
+    utilizzo: 'disuso - rudere',
+  },
+  casa: 'residenziale',
+  'casa abb': { moderno: 'residenziale', label: 'casa abbandonata', utilizzo: 'disuso' },
+  'casa cantoniera': 'servizio',
+  'casa coadiutorale': 'residenziale',
+  'casa dir': { moderno: 'residenziale', label: 'casa diroccata', utilizzo: 'disuso - rudere' },
+  'casa guardiano': 'residenziale',
+  'casa parro': { moderno: 'residenziale', label: 'casa parrocchiale' },
+  'casa uffici postali': 'servizio',
+  casello: 'servizio',
+  caserma: 'servizio',
+  casolare: 'multifunzione',
+  'casolare a': { moderno: 'multifunzione', utilizzo: 'disuso', label: 'casolare abbandonato' },
+  'casolare d': {
+    moderno: 'multifunzione',
+    utilizzo: 'disuso - rudere',
+    label: 'casolare diroccato',
+  },
+  castagneto: 'verde',
+  cc: { moderno: 'residenziale', label: 'casa colonica' },
+  'ceppo nudo': 'verde',
+  coltivo: 'verde',
+  dogana: 'servizio',
+  'ed religioso': { moderno: 'luogo di culto', label: 'luogo di culto' },
+  fabbrica: 'produttivo',
+  fienile: 'produttivo rurale',
+  ls: { label: 'luogo superiore', moderno: 'produttivo rurale' },
+  lt: { label: 'luogo terreno', moderno: 'produttivo rurale' },
+  'lt abb': {
+    label: 'luogo terreno abbandonato',
+    moderno: 'produttivo rurale',
+    utilizzo: 'disuso',
+  },
+  mulino: 'produttivo rurale',
+  nd: 'non rilevabile',
+  'p cantina': { label: 'porzione di cantina', moderno: 'produttivo rurale' },
+  'p casa': { label: 'porzione di casa', moderno: 'residenziale' },
+  'p cc': { label: 'porzione di casa colonica', moderno: 'residenziale' },
+  'p fienile': { moderno: 'produttivo rurale', label: 'porzione di fienile' },
+  'p lt': { moderno: 'produttivo rurale', label: 'porzione di luogo terreno' },
+  'p sf': { moderno: 'produttivo rurale', label: 'porzione di stalla fienile' },
+  'p stalla': { moderno: 'produttivo rurale', label: 'porzione di stalla' },
+  'pasc alpe': { moderno: 'produttivo rurale', label: 'alpeggio' },
+  pascolo: 'verde',
+  prato: 'verde',
+  'sasso n': 'verde',
+  sf: { moderno: 'produttivo rurale', label: 'stalla fienile' },
+  stalla: 'produttivo rurale',
+  zappativo: 'verde',
+  zerbo: 'verde',
+} as const satisfies Record<string, DestinazioneUsoAttuale | ParsedDestinazioneUso1853>
 
-export const stati_censimento_1807 = [
+export type DestinazioneUso1853 = keyof typeof DESTINAZIONI_USO_1853
+
+export type ParsedDestinazioneUso1853 = {
+  label?: string
+  moderno: DestinazioneUsoAttuale
+  utilizzo?: StatoUtilizzo
+}
+
+export const PRESENZA_CENSIMENTO_1807 = [
   'presente',
   'non presente',
   'non disponibile',

@@ -5,12 +5,12 @@ import {
   componenti_architettoniche,
   componenti_strutturali,
   fenomeni_degrado_strutturali,
-  stati_censimento_1807,
-  stati_conservazione,
-  stati_utilizzo,
-  destinazioni_uso_moderno,
-  destinazioni_uso_1853,
-  destinazioni_uso_1951,
+  PRESENZA_CENSIMENTO_1807,
+  STATI_CONSERVAZIONE,
+  STATI_UTILIZZO,
+  DESTINAZIONI_USO_ATTUALI,
+  DESTINAZIONI_USO_1853,
+  DESTINAZIONI_USO_1951,
   caratteri_storico_culturali,
   pavimentazioni_esterne,
   impiantistica,
@@ -18,13 +18,14 @@ import {
   vincoli_tutele,
 } from './Edifici.utils'
 import * as F from '@/db/fields'
+import { String } from 'effect'
 
 //
 
 const field_conservazione: SelectField = {
   name: 'stato_conservazione',
   type: 'select',
-  options: Object.values(stati_conservazione),
+  options: Object.values(STATI_CONSERVAZIONE),
 }
 
 //
@@ -40,7 +41,12 @@ export const Edifici: CollectionConfig = {
   },
   fields: [
     F.relation('localita', 'localita'), // TODO - Filter options based on [sottosistema]
-    F.relation('sezione_localita', 'sezione_localita'), // TODO - Filter options based on [localita]
+    { name: 'sezione_localita', type: 'text' },
+
+    {
+      name: 'particella',
+      type: 'text',
+    },
 
     {
       name: 'geolocalizzazione',
@@ -76,10 +82,6 @@ export const Edifici: CollectionConfig = {
           type: 'text',
         },
         {
-          name: 'subalterno',
-          type: 'text',
-        },
-        {
           name: 'accessibilita',
           type: 'select',
           options: Object.values(accessibilita_edificio),
@@ -98,18 +100,16 @@ export const Edifici: CollectionConfig = {
         {
           name: 'stato_utilizzo',
           type: 'select',
-          options: Object.values(stati_utilizzo),
-        },
-        {
-          name: 'stato_utilizzo_secondario',
-          type: 'select',
-          options: Object.values(stati_utilizzo),
+          options: Object.values(STATI_UTILIZZO),
         },
         {
           name: 'stato_conservazione',
           type: 'select',
-          hasMany: true,
-          options: Object.values(stati_conservazione),
+          options: Object.values(STATI_CONSERVAZIONE),
+        },
+        {
+          name: 'modifiche_sostanziali_caratteri_tradizionali',
+          type: 'checkbox',
         },
         {
           name: 'destinazioni_uso',
@@ -123,21 +123,21 @@ export const Edifici: CollectionConfig = {
               name: 'tag_storico',
               type: 'select',
               options: [
-                ...Object.values(destinazioni_uso_1853),
-                ...Object.values(destinazioni_uso_1951),
+                ...Object.keys(DESTINAZIONI_USO_1853),
+                ...Object.values(DESTINAZIONI_USO_1951),
               ],
             },
             {
               name: 'tag_moderno',
               type: 'select',
-              options: Object.values(destinazioni_uso_moderno),
+              options: Object.values(DESTINAZIONI_USO_ATTUALI),
             },
           ],
         },
         {
-          name: 'stato',
+          name: 'presenza_censimento_1087',
           type: 'select',
-          options: Object.values(stati_censimento_1807),
+          options: Object.values(PRESENZA_CENSIMENTO_1807),
         },
       ],
     },

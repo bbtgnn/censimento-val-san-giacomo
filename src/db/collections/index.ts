@@ -2,7 +2,7 @@ export enum Collections {
   Edifici = 'edifici',
   Sottosistemi = 'sottosistemi',
   Localita = 'localita',
-  SezioneLocalita = 'sezione_localita',
+  Comuni = 'comuni',
   Media = 'media',
 }
 

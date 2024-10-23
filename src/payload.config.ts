@@ -11,8 +11,8 @@ import { Media } from './db/collections/Media'
 import { Edifici } from './db/collections/Edifici'
 import { Sottosistemi } from './db/collections/Sottosistemi'
 import { Localita } from './db/collections/Localita'
-import { SezioneLocalita } from './db/collections/SezioniLocalita'
 import { s3Storage } from '@payloadcms/storage-s3'
+import { Comuni } from './db/collections/Comuni'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -24,7 +24,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Edifici, Sottosistemi, Localita, SezioneLocalita],
+  collections: [Users, Media, Edifici, Sottosistemi, Localita, Comuni],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

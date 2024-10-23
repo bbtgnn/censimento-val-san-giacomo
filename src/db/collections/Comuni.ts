@@ -2,11 +2,11 @@ import type { CollectionConfig } from 'payload'
 import { Collections } from '.'
 import * as F from '@/db/fields'
 
-export const SezioneLocalita: CollectionConfig = {
-  slug: Collections.SezioneLocalita,
+export const Comuni: CollectionConfig = {
+  slug: Collections.Comuni,
   labels: {
-    singular: 'Sezione località',
-    plural: 'Sezioni località',
+    singular: 'Comune',
+    plural: 'Comuni',
   },
   admin: {
     useAsTitle: F.name.name,
@@ -14,5 +14,5 @@ export const SezioneLocalita: CollectionConfig = {
   access: {
     read: () => true,
   },
-  fields: [F.name, F.relation('localita', 'localita')],
+  fields: [{ ...F.name, required: true }],
 }
