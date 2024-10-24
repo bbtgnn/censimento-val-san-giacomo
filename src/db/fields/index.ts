@@ -18,6 +18,8 @@ import { Collection, Collections } from '@/db/collections'
 
 import { capitalizeFirstLetter } from '@/utils/strings'
 
+import type { FieldHook, TypeWithID } from 'payload'
+
 //
 
 // export const divider: UIField = {
@@ -200,3 +202,25 @@ export function titleAndText(name: string, label?: string): GroupField {
 //   localized: true,
 //   fields: [socialNetworkLink],
 // }
+
+export function virtualField<TData extends TypeWithID = any, TValue = any, TSiblingData = any>(
+  field: Extract<Field, { name: string }>,
+  builder: FieldHook<TData, TValue, TSiblingData>,
+) {
+  return {
+    ...field,
+    name: field.name,
+    type: field.type,
+    admin: {
+      hidden: true,
+    },
+    hooks: {
+      beforeChange: [
+        ({ siblingData }: { siblingData: Record<string, unknown> }) => {
+          delete siblingData[field.name]
+        },
+      ],
+      afterRead: [builder],
+    },
+  } as Field
+}
