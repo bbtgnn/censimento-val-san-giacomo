@@ -88,7 +88,8 @@ async function LocalitaCard({ localita }: { localita: Localita }) {
     const anagrafica_2022 = e?.anagrafica?.find((a) => a.anno == '2022')
     assert(anagrafica_2022)
     assert(anagrafica_2022.destinazioni_uso)
-    assert(anagrafica_2022.destinazioni_uso.at(0))
+    const dest_uso_base = anagrafica_2022.destinazioni_uso.at(0)
+    if (!dest_uso_base) return true // TODO - qualcuno non ha destinazione d'uso 2022
     const tag_moderni = anagrafica_2022.destinazioni_uso.map((d) => d.tag_moderno)
     let non_rilevabile = tag_moderni.includes('non rilevabile')
     return non_rilevabile ?? false
